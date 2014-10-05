@@ -26,16 +26,15 @@ type (
 		Branches          Branches          `xml:"branches"`
 	}
 
-	// XXXX
 	Publishers struct {
 		XMLName            xml.Name            `xml:"publishers"`
 		RedeployPublishers []RedeployPublisher `xml:"hudson.maven.RedeployPublisher"`
 	}
+
 	RedeployPublisher struct {
 		XMLName xml.Name `xml:"hudson.maven.RedeployPublisher"`
 		URL     string   `xml:"url"`
 	}
-	// XXXX
 
 	UserRemoteConfigs struct {
 		XMLName          xml.Name           `xml:"userRemoteConfigs"`
