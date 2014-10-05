@@ -20,13 +20,26 @@ type (
 	}
 
 	Scm struct {
-		XMLName xml.Name `xml:"scm"`
-		Class   string   `xml:"class,attr"`
+		XMLName           xml.Name          `xml:"scm"`
+		Class             string            `xml:"class,attr"`
+		UserRemoteConfigs UserRemoteConfigs `xml:userRemoteConfigs`
+		Branches          Branches          `xml:"branches"`
 	}
 
+	// XXXX
+	Publishers struct {
+		XMLName            xml.Name            `xml:"publishers"`
+		RedeployPublishers []RedeployPublisher `xml:"hudson.maven.RedeployPublisher"`
+	}
+	RedeployPublisher struct {
+		XMLName xml.Name `xml:"hudson.maven.RedeployPublisher"`
+		URL     string   `xml:"url"`
+	}
+	// XXXX
+
 	UserRemoteConfigs struct {
-		XMLName xml.Name `xml:"userRemoteConfigs"`
-		Configs []UserRemoteConfig
+		XMLName          xml.Name           `xml:"userRemoteConfigs"`
+		UserRemoteConfig []UserRemoteConfig `xml:"hudson.plugins.git.UserRemoteConfig"`
 	}
 
 	UserRemoteConfig struct {
@@ -35,23 +48,13 @@ type (
 	}
 
 	Branches struct {
-		XMLName     xml.Name `xml:"branches"`
-		GitBranches []Branch
+		XMLName xml.Name `xml:"branches"`
+		Branch  []Branch `xml:"hudson.plugins.git.BranchSpec"`
 	}
 
 	Branch struct {
 		XMLName xml.Name `xml:"hudson.plugins.git.BranchSpec"`
 		Name    string   `xml:"name"`
-	}
-
-	Publishers struct {
-		XMLName            xml.Name `xml:"publishers"`
-		RedeployPublishers []RedeployPublisher
-	}
-
-	RedeployPublisher struct {
-		XMLName xml.Name `xml:"hudson.maven.RedeployPublisher"`
-		URL     string   `xml:"url"`
 	}
 
 	RootModule struct {

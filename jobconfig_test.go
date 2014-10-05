@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	jobConfigXML string = `
+	jobConfig string = `
 <?xml version='1.0' encoding='UTF-8'?>
 <maven2-moduleset plugin="maven-plugin@2.6">
   <actions/>
@@ -30,7 +30,7 @@ var (
     </userRemoteConfigs>
     <branches>
       <hudson.plugins.git.BranchSpec>
-        <name>*/develop</name>
+        <name>origin/develop</name>
       </hudson.plugins.git.BranchSpec>
     </branches>
     <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
@@ -115,7 +115,7 @@ func TestGetJobConfig(t *testing.T) {
 		if r.Header.Get("Accept") != "application/xml" {
 			t.Fatalf("GetJobs() expected request Accept header to be application/xml but found %s\n", r.Header.Get("Accept"))
 		}
-		fmt.Fprintln(w, jobConfigXML)
+		fmt.Fprintln(w, jobConfig)
 	}))
 	defer testServer.Close()
 
@@ -128,10 +128,6 @@ func TestGetJobConfig(t *testing.T) {
 		t.Fatalf("Wanted SCM.Class == hudson.plugins.git.GitSCM but found %d\n", cfg.SCM.Class)
 	}
 
-	if len(cfg.Publishers.RedeployPublishers) != 1 {
-		t.Fatalf("Wanted Publishers.RedeployPublishers slice of length 1 but found %d\n", len(cfg.Publishers.RedeployPublishers))
-	}
-
 	if cfg.RootModule.GroupID != "com.example.widgets" {
 		t.Fatalf("Wanted RootModule.GroupID == com.example.com but found %d\n", cfg.RootModule.GroupID)
 	}
@@ -140,7 +136,27 @@ func TestGetJobConfig(t *testing.T) {
 		t.Fatalf("Wanted RootModule.ArtifactID == widge but found %d\n", cfg.RootModule.ArtifactID)
 	}
 
-	/*
-		{XMLName:{Space: Local:maven2-moduleset} SCM:{XMLName:{Space: Local:scm} Class:hudson.plugins.git.GitSCM} Publishers:{XMLName:{Space: Local:publishers} RedeployPublishers:[]} RootModule:{XMLName:{Space: Local:rootModule} GroupID:com.example.widgets ArtifactID:widge}}
-	*/
+	if len(cfg.Publishers.RedeployPublishers) != 1 {
+		t.Fatalf("Wanted Publishers.RedeployPublishers slice of length 1 but found %d\n", len(cfg.Publishers.RedeployPublishers))
+	}
+
+	if cfg.Publishers.RedeployPublishers[0].URL != "http://nexus.example.com/nexus/content/repositories/snapshots/" {
+		t.Fatalf("Wanted Publishers.RedeployPublishers[0].URL == http://nexus.example.com/nexus/content/repositories/snapshots/ but found %s\n", len(cfg.Publishers.RedeployPublishers[0].URL))
+	}
+
+	if len(cfg.SCM.UserRemoteConfigs.UserRemoteConfig) != 1 {
+		t.Fatalf("Wanted len(SCM.UserRemoteConfigs.UserRemoteConfig) == 1 but found %d\n", len(cfg.SCM.UserRemoteConfigs.UserRemoteConfig))
+	}
+
+	if cfg.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL != "ssh://example.com/proj/cool.git" {
+		t.Fatalf("Wanted SCM.UserRemoteConfigs[0].UserRemoteConfig.URL == ssh://example.com/proj/cool.git but found %s\n", len(cfg.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL))
+	}
+
+	if len(cfg.SCM.Branches.Branch) != 1 {
+		t.Fatalf("Wanted len(SCM.Branches.Branch) == 1 but found %d\n", len(cfg.SCM.Branches.Branch))
+	}
+
+	if cfg.SCM.Branches.Branch[0].Name != "origin/develop" {
+		t.Fatalf("Wanted SCM.Branches.Branch[0].Name == origin/develop but found %d\n", cfg.SCM.Branches.Branch[0].Name)
+	}
 }
