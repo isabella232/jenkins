@@ -1,5 +1,5 @@
-jenkinsgo
-=========
+jenkins
+=======
 
 Go package containing various Jenkins tools built on the Jenkins REST API.
 
