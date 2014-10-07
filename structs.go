@@ -17,6 +17,7 @@ type (
 		SCM        Scm        `xml:"scm"`
 		Publishers Publishers `xml:"publishers"`
 		RootModule RootModule `xml:"rootModule"`
+		JobName    string
 	}
 
 	Scm struct {

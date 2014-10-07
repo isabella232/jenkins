@@ -68,6 +68,7 @@ func GetJobConfig(baseUrl, jobName string) (JobConfig, error) {
 	if err := xml.NewDecoder(reader).Decode(&config); err != nil {
 		return JobConfig{}, err
 	}
+	config.JobName = jobName
 	return config, nil
 }
 

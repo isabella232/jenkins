@@ -124,6 +124,10 @@ func TestGetJobConfig(t *testing.T) {
 		t.Fatalf("GetJobConfig() not expecting an error, but received: %v\n", err)
 	}
 
+	if cfg.JobName != "thejob" {
+		t.Fatalf("Wanted job name thejob but found: %v\n", cfg.JobName)
+	}
+
 	if cfg.SCM.Class != "hudson.plugins.git.GitSCM" {
 		t.Fatalf("Wanted SCM.Class == hudson.plugins.git.GitSCM but found %d\n", cfg.SCM.Class)
 	}
