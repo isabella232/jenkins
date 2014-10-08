@@ -72,6 +72,23 @@ func GetJobConfig(baseUrl, jobName string) (JobConfig, error) {
 	return config, nil
 }
 
+// JenkinsJobCreate creates a Jenkins job with the given name for the given XML job config.
+func CreateJob(baseUrl, jobName, jobConfigXML string) error {
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/createItem?name=%s", baseUrl, jobName), bytes.NewBuffer([]byte(jobConfigXML)))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-type", "application/xml")
+	responseCode, data, err := consumeResponse(req)
+	if err != nil {
+		return err
+	}
+	if responseCode != http.StatusOK {
+		return fmt.Errorf("Error creating Jenkins job.  Status code: %d, response=%s\n", responseCode, string(data))
+	}
+	return nil
+}
+
 func consumeResponse(req *http.Request) (int, []byte, error) {
 	var response *http.Response
 	var err error
