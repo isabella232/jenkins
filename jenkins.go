@@ -10,10 +10,6 @@ import (
 	"net/http"
 )
 
-var (
-	httpClient *http.Client = &http.Client{}
-)
-
 // GetJobs retrieves the set of Jenkins jobs as a map indexed by job name.
 func GetJobs(baseUrl string) (map[string]JobDescriptor, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/json/jobs", baseUrl), nil)
@@ -100,10 +96,8 @@ func DeleteJob(baseUrl, jobName string) error {
 	if err != nil {
 		return err
 	}
-	// todo figure out what the response code is if the delete worked.
-	if responseCode != http.StatusOK {
-		//return fmt.Errorf("Error creating Jenkins job.  Status code: %d, response=%s\n", responseCode, string(data))
-		fmt.Printf("Error creating Jenkins job.  Status code: %d, response=%s\n", responseCode, string(data))
+	if responseCode != http.StatusFound {
+		return fmt.Errorf("Error deleting Jenkins job.  Status code: %d, response=%s\n", responseCode, string(data))
 	}
 	return nil
 }
@@ -111,7 +105,16 @@ func DeleteJob(baseUrl, jobName string) error {
 func consumeResponse(req *http.Request) (int, []byte, error) {
 	var response *http.Response
 	var err error
-	response, err = httpClient.Do(req)
+	/*
+	   $ curl -i -d "" http://jenkins.example.com:8080/job/somejob/doDelete
+	   HTTP/1.1 302 Found
+	   Location: http://jenkins.example.com:8080/
+	   Content-Length: 0
+	   Server: Jetty(8.y.z-SNAPSHOT)
+	*/
+	// So 302 means it worked, but we don't want to follow the redirect.  Why use http.DefaultTransport.RoundTrip:
+	// http://stackoverflow.com/questions/14420222/query-url-without-redirect-in-go
+	response, err = http.DefaultTransport.RoundTrip(req)
 
 	if err != nil {
 		return 0, nil, err

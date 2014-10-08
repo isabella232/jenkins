@@ -18,7 +18,8 @@ func TestDeleteJob(t *testing.T) {
 		if r.Header.Get("Content-type") != "application/xml" {
 			t.Fatalf("wanted  Content-type header application/xml but found %s\n", r.Header.Get("Content-type"))
 		}
-		w.WriteHeader(http.StatusOK)
+		w.Header().Add("Location", "http://localhost:55555")
+		w.WriteHeader(http.StatusFound)
 	}))
 	defer testServer.Close()
 
