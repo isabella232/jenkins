@@ -72,7 +72,7 @@ func GetJobConfig(baseUrl, jobName string) (JobConfig, error) {
 	return config, nil
 }
 
-// JenkinsJobCreate creates a Jenkins job with the given name for the given XML job config.
+// CreateJob creates a Jenkins job with the given name for the given XML job config.
 func CreateJob(baseUrl, jobName, jobConfigXML string) error {
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/createItem?name=%s", baseUrl, jobName), bytes.NewBuffer([]byte(jobConfigXML)))
 	if err != nil {
@@ -85,6 +85,25 @@ func CreateJob(baseUrl, jobName, jobConfigXML string) error {
 	}
 	if responseCode != http.StatusOK {
 		return fmt.Errorf("Error creating Jenkins job.  Status code: %d, response=%s\n", responseCode, string(data))
+	}
+	return nil
+}
+
+// DeleteJob creates a Jenkins job with the given name for the given XML job config.
+func DeleteJob(baseUrl, jobName string) error {
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/job/%s/doDelete", baseUrl, jobName), bytes.NewBuffer([]byte("")))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-type", "application/xml")
+	responseCode, data, err := consumeResponse(req)
+	if err != nil {
+		return err
+	}
+	// todo figure out what the response code is if the delete worked.
+	if responseCode != http.StatusOK {
+		//return fmt.Errorf("Error creating Jenkins job.  Status code: %d, response=%s\n", responseCode, string(data))
+		fmt.Printf("Error creating Jenkins job.  Status code: %d, response=%s\n", responseCode, string(data))
 	}
 	return nil
 }

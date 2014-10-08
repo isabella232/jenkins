@@ -106,6 +106,9 @@ H/3 * * * *
 
 func TestCreateJenkinsJobsNoError(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			t.Fatalf("wanted POST but found %s\n", r.Method)
+		}
 		url := *r.URL
 		if url.Path != "/createItem" {
 			t.Fatalf("wanted URL path /createItem but found %s\n", url.Path)
