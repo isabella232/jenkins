@@ -164,3 +164,22 @@ func TestGetJobConfig(t *testing.T) {
 		t.Fatalf("Wanted SCM.Branches.Branch[0].Name == origin/develop but found %d\n", cfg.SCM.Branches.Branch[0].Name)
 	}
 }
+
+func TestGetJobConfig500(t *testing.T) {
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		url := *r.URL
+		if url.Path != "/job/thejob/config.xml" {
+			t.Fatalf("GetJobs() URL path expected to end with config.xml: %s\n", url.Path)
+		}
+		if r.Header.Get("Accept") != "application/xml" {
+			t.Fatalf("GetJobs() expected request Accept header to be application/xml but found %s\n", r.Header.Get("Accept"))
+		}
+		w.WriteHeader(500)
+	}))
+	defer testServer.Close()
+
+	if _, err := GetJobConfig(testServer.URL, "thejob"); err == nil {
+		t.Fatalf("GetJobConfig() expecting an error, but received none\n")
+	}
+
+}

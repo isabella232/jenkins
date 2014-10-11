@@ -132,3 +132,31 @@ func TestCreateJenkinsJobsNoError(t *testing.T) {
 		t.Fatalf("JenkinsJobCreate() not expecting an error, but received: %v\n", err)
 	}
 }
+
+func TestCreateJenkinsJobs500(t *testing.T) {
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			t.Fatalf("wanted POST but found %s\n", r.Method)
+		}
+		url := *r.URL
+		if url.Path != "/createItem" {
+			t.Fatalf("wanted URL path /createItem but found %s\n", url.Path)
+		}
+		if r.Header.Get("Content-type") != "application/xml" {
+			t.Fatalf("wanted  Content-type header application/xml but found %s\n", r.Header.Get("Content-type"))
+		}
+		data, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			t.Fatalf("error reading POST body: %v\n", err)
+		}
+		if bytes.Compare([]byte(fooJob), data) != 0 {
+			t.Fatalf("received unexpected []byte.  Expecting exactly the same as []byte(jenkinsJobConfig)")
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer testServer.Close()
+
+	if err := CreateJob(testServer.URL, "job-name", fooJob); err == nil {
+		t.Fatalf("JenkinsJobCreate() expecting an error, but received none\n")
+	}
+}

@@ -84,3 +84,21 @@ func TestGetJobsNoError(t *testing.T) {
 		}
 	}
 }
+
+func TestGetJobs500(t *testing.T) {
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		url := *r.URL
+		if url.Path != "/api/json/jobs" {
+			t.Fatalf("GetJobs() URL path expected to be /api/json/jobs but found %s\n", url.Path)
+		}
+		if r.Header.Get("Accept") != "application/json" {
+			t.Fatalf("GetJobs() expected request Accept header to be application/json but found %s\n", r.Header.Get("Accept"))
+		}
+		w.WriteHeader(500)
+	}))
+	defer testServer.Close()
+
+	if _, err := GetJobs(testServer.URL); err == nil {
+		t.Fatalf("GetJobs() expecting an error, but received none\n")
+	}
+}
