@@ -13,6 +13,7 @@ import (
 // GetJobs retrieves the set of Jenkins jobs as a map indexed by job name.
 func GetJobs(baseUrl string) (map[string]JobDescriptor, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/json/jobs", baseUrl), nil)
+	log.Printf("jenkins.GetJobs URL: %s\n", req.URL)
 	if err != nil {
 		return nil, err
 	}
@@ -44,6 +45,7 @@ func GetJobs(baseUrl string) (map[string]JobDescriptor, error) {
 // GetJobConfig retrieves the Jenkins jobs config for the named job.
 func GetJobConfig(baseUrl, jobName string) (JobConfig, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/job/%s/config.xml", baseUrl, jobName), nil)
+	log.Printf("jenkins.GetJobConfig URL: %s\n", req.URL)
 	if err != nil {
 		return JobConfig{}, err
 	}
@@ -71,6 +73,7 @@ func GetJobConfig(baseUrl, jobName string) (JobConfig, error) {
 // CreateJob creates a Jenkins job with the given name for the given XML job config.
 func CreateJob(baseUrl, jobName, jobConfigXML string) error {
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/createItem?name=%s", baseUrl, jobName), bytes.NewBuffer([]byte(jobConfigXML)))
+	log.Printf("jenkins.CreateJob URL: %s\n", req.URL)
 	if err != nil {
 		return err
 	}
@@ -88,6 +91,7 @@ func CreateJob(baseUrl, jobName, jobConfigXML string) error {
 // DeleteJob creates a Jenkins job with the given name for the given XML job config.
 func DeleteJob(baseUrl, jobName string) error {
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/job/%s/doDelete", baseUrl, jobName), bytes.NewBuffer([]byte("")))
+	log.Printf("jenkins.DeleteJob URL: %s\n", req.URL)
 	if err != nil {
 		return err
 	}
