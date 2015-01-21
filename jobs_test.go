@@ -67,7 +67,8 @@ func TestGetJobsNoError(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	jobs, err := GetJobs(testServer.URL)
+	jenkinsClient := NewClient(testServer.URL)
+	jobs, err := jenkinsClient.GetJobs()
 	if err != nil {
 		t.Fatalf("GetJobs() not expecting an error, but received: %v\n", err)
 	}
@@ -98,7 +99,8 @@ func TestGetJobs500(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	if _, err := GetJobs(testServer.URL); err == nil {
+	jenkinsClient := NewClient(testServer.URL)
+	if _, err := jenkinsClient.GetJobs(); err == nil {
 		t.Fatalf("GetJobs() expecting an error, but received none\n")
 	}
 }

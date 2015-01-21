@@ -3,6 +3,18 @@ package jenkins
 import "encoding/xml"
 
 type (
+	Jenkins interface {
+		GetJobs(baseUrl string) (map[string]JobDescriptor, error)
+		GetJobConfig(baseUrl, jobName string) (JobConfig, error)
+		CreateJob(baseUrl, jobName, jobConfigXML string) error
+		DeleteJob(baseUrl, jobName string) error
+	}
+
+	Client struct {
+		baseURL string
+		Jenkins
+	}
+
 	JobDescriptor struct {
 		Name string `json:"name"`
 		URL  string `json:"url"`

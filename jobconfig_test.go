@@ -119,7 +119,8 @@ func TestGetJobConfig(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	cfg, err := GetJobConfig(testServer.URL, "thejob")
+	jenkinsClient := NewClient(testServer.URL)
+	cfg, err := jenkinsClient.GetJobConfig("thejob")
 	if err != nil {
 		t.Fatalf("GetJobConfig() not expecting an error, but received: %v\n", err)
 	}
@@ -178,7 +179,9 @@ func TestGetJobConfig500(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	if _, err := GetJobConfig(testServer.URL, "thejob"); err == nil {
+	jenkinsClient := NewClient(testServer.URL)
+
+	if _, err := jenkinsClient.GetJobConfig("thejob"); err == nil {
 		t.Fatalf("GetJobConfig() expecting an error, but received none\n")
 	}
 

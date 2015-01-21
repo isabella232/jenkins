@@ -23,7 +23,8 @@ func TestDeleteJob(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	err := DeleteJob(testServer.URL, "jobname")
+	jenkinsClient := NewClient(testServer.URL)
+	err := jenkinsClient.DeleteJob("jobname")
 	if err != nil {
 		t.Fatalf("job-delete not expecting an error, but received: %v\n", err)
 	}
@@ -45,7 +46,9 @@ func TestDeleteJob500(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	if err := DeleteJob(testServer.URL, "jobname"); err == nil {
+	jenkinsClient := NewClient(testServer.URL)
+
+	if err := jenkinsClient.DeleteJob("jobname"); err == nil {
 		t.Fatalf("job-delete expecting an error, but received none\n")
 	}
 }
