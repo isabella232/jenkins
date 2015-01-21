@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-func NewClient(baseURL string) Client {
+func NewClient(baseURL string) Jenkins {
 	return Client{baseURL: baseURL}
 }
 

@@ -4,10 +4,10 @@ import "encoding/xml"
 
 type (
 	Jenkins interface {
-		GetJobs(baseUrl string) (map[string]JobDescriptor, error)
-		GetJobConfig(baseUrl, jobName string) (JobConfig, error)
-		CreateJob(baseUrl, jobName, jobConfigXML string) error
-		DeleteJob(baseUrl, jobName string) error
+		GetJobs() (map[string]JobDescriptor, error)
+		GetJobConfig(jobName string) (JobConfig, error)
+		CreateJob(jobName, jobConfigXML string) error
+		DeleteJob(jobName string) error
 	}
 
 	Client struct {
