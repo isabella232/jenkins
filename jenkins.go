@@ -8,15 +8,16 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 )
 
-func NewClient(baseURL string) Jenkins {
+func NewClient(baseURL *url.URL) Jenkins {
 	return Client{baseURL: baseURL}
 }
 
 // GetJobs retrieves the set of Jenkins jobs as a map indexed by job name.
 func (client Client) GetJobs() (map[string]JobDescriptor, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/json/jobs", client.baseURL), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/json/jobs", client.baseURL.String()), nil)
 	log.Printf("jenkins.GetJobs URL: %s\n", req.URL)
 	if err != nil {
 		return nil, err
@@ -48,7 +49,7 @@ func (client Client) GetJobs() (map[string]JobDescriptor, error) {
 
 // GetJobConfig retrieves the Jenkins jobs config for the named job.
 func (client Client) GetJobConfig(jobName string) (JobConfig, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/job/%s/config.xml", client.baseURL, jobName), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/job/%s/config.xml", client.baseURL.String(), jobName), nil)
 	log.Printf("jenkins.GetJobConfig URL: %s\n", req.URL)
 	if err != nil {
 		return JobConfig{}, err
@@ -76,7 +77,7 @@ func (client Client) GetJobConfig(jobName string) (JobConfig, error) {
 
 // CreateJob creates a Jenkins job with the given name for the given XML job config.
 func (client Client) CreateJob(jobName, jobConfigXML string) error {
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/createItem?name=%s", client.baseURL, jobName), bytes.NewBuffer([]byte(jobConfigXML)))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/createItem?name=%s", client.baseURL.String(), jobName), bytes.NewBuffer([]byte(jobConfigXML)))
 	log.Printf("jenkins.CreateJob URL: %s\n", req.URL)
 	if err != nil {
 		return err
@@ -94,7 +95,7 @@ func (client Client) CreateJob(jobName, jobConfigXML string) error {
 
 // DeleteJob creates a Jenkins job with the given name for the given XML job config.
 func (client Client) DeleteJob(jobName string) error {
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/job/%s/doDelete", client.baseURL, jobName), bytes.NewBuffer([]byte("")))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/job/%s/doDelete", client.baseURL.String(), jobName), bytes.NewBuffer([]byte("")))
 	log.Printf("jenkins.DeleteJob URL: %s\n", req.URL)
 	if err != nil {
 		return err

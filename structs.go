@@ -1,6 +1,9 @@
 package jenkins
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+	"net/url"
+)
 
 type (
 	Jenkins interface {
@@ -11,7 +14,7 @@ type (
 	}
 
 	Client struct {
-		baseURL string
+		baseURL *url.URL
 		Jenkins
 	}
 

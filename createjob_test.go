@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 )
 
@@ -127,7 +128,8 @@ func TestCreateJenkinsJobsNoError(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	jenkinsClient := NewClient(testServer.URL)
+	url, _ := url.Parse(testServer.URL)
+	jenkinsClient := NewClient(url)
 	err := jenkinsClient.CreateJob("job-name", fooJob)
 	if err != nil {
 		t.Fatalf("JenkinsJobCreate() not expecting an error, but received: %v\n", err)
@@ -157,7 +159,8 @@ func TestCreateJenkinsJobs500(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	jenkinsClient := NewClient(testServer.URL)
+	url, _ := url.Parse(testServer.URL)
+	jenkinsClient := NewClient(url)
 	if err := jenkinsClient.CreateJob("job-name", fooJob); err == nil {
 		t.Fatalf("JenkinsJobCreate() expecting an error, but received none\n")
 	}

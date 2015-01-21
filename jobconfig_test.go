@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 )
 
@@ -119,7 +120,8 @@ func TestGetJobConfig(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	jenkinsClient := NewClient(testServer.URL)
+	url, _ := url.Parse(testServer.URL)
+	jenkinsClient := NewClient(url)
 	cfg, err := jenkinsClient.GetJobConfig("thejob")
 	if err != nil {
 		t.Fatalf("GetJobConfig() not expecting an error, but received: %v\n", err)
@@ -179,8 +181,8 @@ func TestGetJobConfig500(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	jenkinsClient := NewClient(testServer.URL)
-
+	url, _ := url.Parse(testServer.URL)
+	jenkinsClient := NewClient(url)
 	if _, err := jenkinsClient.GetJobConfig("thejob"); err == nil {
 		t.Fatalf("GetJobConfig() expecting an error, but received none\n")
 	}

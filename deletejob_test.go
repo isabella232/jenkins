@@ -3,6 +3,7 @@ package jenkins
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 )
 
@@ -23,7 +24,8 @@ func TestDeleteJob(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	jenkinsClient := NewClient(testServer.URL)
+	url, _ := url.Parse(testServer.URL)
+	jenkinsClient := NewClient(url)
 	err := jenkinsClient.DeleteJob("jobname")
 	if err != nil {
 		t.Fatalf("job-delete not expecting an error, but received: %v\n", err)
@@ -46,8 +48,8 @@ func TestDeleteJob500(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	jenkinsClient := NewClient(testServer.URL)
-
+	url, _ := url.Parse(testServer.URL)
+	jenkinsClient := NewClient(url)
 	if err := jenkinsClient.DeleteJob("jobname"); err == nil {
 		t.Fatalf("job-delete expecting an error, but received none\n")
 	}
