@@ -15,6 +15,8 @@ type (
 
 	Client struct {
 		baseURL *url.URL
+        userName string
+        password string
 		Jenkins
 	}
 

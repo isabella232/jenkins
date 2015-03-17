@@ -116,12 +116,15 @@ func TestGetJobConfig(t *testing.T) {
 		if r.Header.Get("Accept") != "application/xml" {
 			t.Fatalf("GetJobs() expected request Accept header to be application/xml but found %s\n", r.Header.Get("Accept"))
 		}
+        if r.Header.Get("Authorization") != "Basic dTpw" {
+            t.Fatalf("Want Basic dTpw but got %s\n", r.Header.Get("Authorization"))
+        }
 		fmt.Fprintln(w, jobConfig)
 	}))
 	defer testServer.Close()
 
 	url, _ := url.Parse(testServer.URL)
-	jenkinsClient := NewClient(url)
+    jenkinsClient := NewClient(url, "u", "p")
 	cfg, err := jenkinsClient.GetJobConfig("thejob")
 	if err != nil {
 		t.Fatalf("GetJobConfig() not expecting an error, but received: %v\n", err)
@@ -177,12 +180,15 @@ func TestGetJobConfig500(t *testing.T) {
 		if r.Header.Get("Accept") != "application/xml" {
 			t.Fatalf("GetJobs() expected request Accept header to be application/xml but found %s\n", r.Header.Get("Accept"))
 		}
+        if r.Header.Get("Authorization") != "Basic dTpw" {
+            t.Fatalf("Want Basic dTpw but got %s\n", r.Header.Get("Authorization"))
+        }
 		w.WriteHeader(500)
 	}))
 	defer testServer.Close()
 
 	url, _ := url.Parse(testServer.URL)
-	jenkinsClient := NewClient(url)
+    jenkinsClient := NewClient(url, "u", "p")
 	if _, err := jenkinsClient.GetJobConfig("thejob"); err == nil {
 		t.Fatalf("GetJobConfig() expecting an error, but received none\n")
 	}

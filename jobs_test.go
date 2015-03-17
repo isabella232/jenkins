@@ -64,12 +64,15 @@ func TestGetJobsNoError(t *testing.T) {
 		if r.Header.Get("Accept") != "application/json" {
 			t.Fatalf("GetJobs() expected request Accept header to be application/json but found %s\n", r.Header.Get("Accept"))
 		}
+        if r.Header.Get("Authorization") != "Basic dTpw" {
+            t.Fatalf("Want Basic dTpw but got %s\n", r.Header.Get("Authorization"))
+        }
 		fmt.Fprintln(w, jenkinsJobsResponse)
 	}))
 	defer testServer.Close()
 
 	url, _ := url.Parse(testServer.URL)
-	jenkinsClient := NewClient(url)
+	jenkinsClient := NewClient(url, "u", "p")
 	jobs, err := jenkinsClient.GetJobs()
 	if err != nil {
 		t.Fatalf("GetJobs() not expecting an error, but received: %v\n", err)
@@ -97,12 +100,15 @@ func TestGetJobs500(t *testing.T) {
 		if r.Header.Get("Accept") != "application/json" {
 			t.Fatalf("GetJobs() expected request Accept header to be application/json but found %s\n", r.Header.Get("Accept"))
 		}
+        if r.Header.Get("Authorization") != "Basic dTpw" {
+            t.Fatalf("Want Basic dTpw but got %s\n", r.Header.Get("Authorization"))
+        }
 		w.WriteHeader(500)
 	}))
 	defer testServer.Close()
 
 	url, _ := url.Parse(testServer.URL)
-	jenkinsClient := NewClient(url)
+	jenkinsClient := NewClient(url, "u", "p")
 	if _, err := jenkinsClient.GetJobs(); err == nil {
 		t.Fatalf("GetJobs() expecting an error, but received none\n")
 	}

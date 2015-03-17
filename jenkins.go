@@ -11,8 +11,8 @@ import (
 	"net/url"
 )
 
-func NewClient(baseURL *url.URL) Jenkins {
-	return Client{baseURL: baseURL}
+func NewClient(baseURL *url.URL, username, password string) Jenkins {
+	return Client{baseURL: baseURL, userName: username, password: password}
 }
 
 // GetJobs retrieves the set of Jenkins jobs as a map indexed by job name.
@@ -23,6 +23,7 @@ func (client Client) GetJobs() (map[string]JobDescriptor, error) {
 		return nil, err
 	}
 	req.Header.Set("Accept", "application/json")
+    req.SetBasicAuth(client.userName, client.password)
 
 	responseCode, data, err := consumeResponse(req)
 	if err != nil {
@@ -55,6 +56,7 @@ func (client Client) GetJobConfig(jobName string) (JobConfig, error) {
 		return JobConfig{}, err
 	}
 	req.Header.Set("Accept", "application/xml")
+    req.SetBasicAuth(client.userName, client.password)
 
 	responseCode, data, err := consumeResponse(req)
 	if err != nil {
@@ -83,6 +85,8 @@ func (client Client) CreateJob(jobName, jobConfigXML string) error {
 		return err
 	}
 	req.Header.Set("Content-type", "application/xml")
+    req.SetBasicAuth(client.userName, client.password)
+
 	responseCode, data, err := consumeResponse(req)
 	if err != nil {
 		return err
@@ -101,6 +105,8 @@ func (client Client) DeleteJob(jobName string) error {
 		return err
 	}
 	req.Header.Set("Content-type", "application/xml")
+    req.SetBasicAuth(client.userName, client.password)
+
 	responseCode, data, err := consumeResponse(req)
 	if err != nil {
 		return err
