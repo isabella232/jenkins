@@ -15,6 +15,81 @@ func NewClient(baseURL *url.URL, username, password string) Jenkins {
 	return Client{baseURL: baseURL, userName: username, password: password}
 }
 
+func (client Client) GetJobSummaries() (map[string]JobSummary, error) {
+	if jobDescriptors, err := client.GetJobs(); err != nil {
+		return nil, err
+	} else {
+		result := make(map[string]JobSummary)
+		for _, jobDescriptor := range jobDescriptors {
+			if jobSummary, err := client.getJobSummary(jobDescriptor); err != nil {
+				continue
+			} else {
+				result[jobDescriptor.Name] = jobSummary
+			}
+		}
+		return result, nil
+	}
+}
+
+func (client Client) getJobSummary(jobDescriptor JobDescriptor) (JobSummary, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/job/%s/config.xml", client.baseURL.String(), jobDescriptor.Name), nil)
+	log.Printf("jenkins.getJobSummary URL: %s\n", req.URL)
+	if err != nil {
+		return JobSummary{}, err
+	}
+	req.Header.Set("Accept", "application/xml")
+	req.SetBasicAuth(client.userName, client.password)
+
+	responseCode, data, err := consumeResponse(req)
+	if err != nil {
+		return JobSummary{}, err
+	}
+
+	if responseCode != http.StatusOK {
+		log.Printf("%s", string(data))
+		return JobSummary{}, fmt.Errorf("%s", string(data))
+	}
+
+	reader := bytes.NewBuffer(data)
+
+	var maven JobConfig
+	err = xml.NewDecoder(reader).Decode(&maven)
+	if err == nil {
+		if len(maven.SCM.Branches.Branch) != 1 {
+			return JobSummary{}, fmt.Errorf("Maven-type job %s contains more than one built branch.  This is not supported.", jobDescriptor)
+		}
+		if len(maven.SCM.UserRemoteConfigs.UserRemoteConfig) > 1 {
+			return JobSummary{}, fmt.Errorf("Maven-type job %s contains more than one built branch.  This is not supported.", jobDescriptor)
+		}
+		return JobSummary{
+            JobType:       Maven,
+            JobDescriptor: jobDescriptor,
+			GitURL:        maven.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL,
+			Branch:        maven.SCM.Branches.Branch[0].Name,
+		}, nil
+	} else {
+		var freestyle FreeStyleJobConfig
+		err = xml.NewDecoder(reader).Decode(&freestyle)
+		if err == nil {
+			if len(freestyle.SCM.Branches.Branch) != 1 {
+				return JobSummary{}, fmt.Errorf("Freestyle-type job %s contains more than one built branch.  This is not supported.", jobDescriptor)
+			}
+			if len(freestyle.SCM.UserRemoteConfigs.UserRemoteConfig) > 1 {
+				return JobSummary{}, fmt.Errorf("Freestyle-type job %s contains more than one built branch.  This is not supported.", jobDescriptor)
+			}
+			return JobSummary{
+				JobType:       Freestyle,
+                JobDescriptor: jobDescriptor,
+                GitURL:        freestyle.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL,
+				Branch:        freestyle.SCM.Branches.Branch[0].Name,
+			}, nil
+		} else {
+			return JobSummary{}, nil
+		}
+	}
+
+}
+
 // GetJobs retrieves the set of Jenkins jobs as a map indexed by job name.
 func (client Client) GetJobs() (map[string]JobDescriptor, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/json/jobs", client.baseURL.String()), nil)
@@ -23,7 +98,7 @@ func (client Client) GetJobs() (map[string]JobDescriptor, error) {
 		return nil, err
 	}
 	req.Header.Set("Accept", "application/json")
-    req.SetBasicAuth(client.userName, client.password)
+	req.SetBasicAuth(client.userName, client.password)
 
 	responseCode, data, err := consumeResponse(req)
 	if err != nil {
@@ -56,7 +131,7 @@ func (client Client) GetJobConfig(jobName string) (JobConfig, error) {
 		return JobConfig{}, err
 	}
 	req.Header.Set("Accept", "application/xml")
-    req.SetBasicAuth(client.userName, client.password)
+	req.SetBasicAuth(client.userName, client.password)
 
 	responseCode, data, err := consumeResponse(req)
 	if err != nil {
@@ -85,7 +160,7 @@ func (client Client) CreateJob(jobName, jobConfigXML string) error {
 		return err
 	}
 	req.Header.Set("Content-type", "application/xml")
-    req.SetBasicAuth(client.userName, client.password)
+	req.SetBasicAuth(client.userName, client.password)
 
 	responseCode, data, err := consumeResponse(req)
 	if err != nil {
@@ -105,7 +180,7 @@ func (client Client) DeleteJob(jobName string) error {
 		return err
 	}
 	req.Header.Set("Content-type", "application/xml")
-    req.SetBasicAuth(client.userName, client.password)
+	req.SetBasicAuth(client.userName, client.password)
 
 	responseCode, data, err := consumeResponse(req)
 	if err != nil {
