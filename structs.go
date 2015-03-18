@@ -16,7 +16,7 @@ type (
 	Jenkins interface {
 		GetJobs() (map[string]JobDescriptor, error)
 		GetJobConfig(jobName string) (JobConfig, error)
-		GetJobSummaries() (map[string]JobSummary, error)
+		GetJobSummaries() ([]JobSummary, error)
 		CreateJob(jobName, jobConfigXML string) error
 		DeleteJob(jobName string) error
 	}

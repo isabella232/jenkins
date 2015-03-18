@@ -15,19 +15,19 @@ func NewClient(baseURL *url.URL, username, password string) Jenkins {
 	return Client{baseURL: baseURL, userName: username, password: password}
 }
 
-func (client Client) GetJobSummaries() (map[string]JobSummary, error) {
+func (client Client) GetJobSummaries() ([]JobSummary, error) {
 	if jobDescriptors, err := client.GetJobs(); err != nil {
 		return nil, err
 	} else {
-		result := make(map[string]JobSummary)
+		summaries := make([]JobSummary, 0)
 		for _, jobDescriptor := range jobDescriptors {
 			if jobSummary, err := client.getJobSummary(jobDescriptor); err != nil {
 				continue
 			} else {
-				result[jobDescriptor.Name] = jobSummary
+				summaries = append(summaries, jobSummary)
 			}
 		}
-		return result, nil
+		return summaries, nil
 	}
 }
 
@@ -62,8 +62,8 @@ func (client Client) getJobSummary(jobDescriptor JobDescriptor) (JobSummary, err
 			return JobSummary{}, fmt.Errorf("Maven-type job %s contains more than one built branch.  This is not supported.", jobDescriptor)
 		}
 		return JobSummary{
-            JobType:       Maven,
-            JobDescriptor: jobDescriptor,
+			JobType:       Maven,
+			JobDescriptor: jobDescriptor,
 			GitURL:        maven.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL,
 			Branch:        maven.SCM.Branches.Branch[0].Name,
 		}, nil
@@ -79,8 +79,8 @@ func (client Client) getJobSummary(jobDescriptor JobDescriptor) (JobSummary, err
 			}
 			return JobSummary{
 				JobType:       Freestyle,
-                JobDescriptor: jobDescriptor,
-                GitURL:        freestyle.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL,
+				JobDescriptor: jobDescriptor,
+				GitURL:        freestyle.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL,
 				Branch:        freestyle.SCM.Branches.Branch[0].Name,
 			}, nil
 		} else {
