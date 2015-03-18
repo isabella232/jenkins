@@ -55,10 +55,10 @@ type (
 
 	// Model of both Maven and Freestyle job types
 	JobSummary struct {
-        JobDescriptor JobDescriptor
-		JobType JobType
-		GitURL  string
-		Branch  string
+		JobDescriptor JobDescriptor
+		JobType       JobType
+		GitURL        string
+		Branch        string
 	}
 
 	Scm struct {
