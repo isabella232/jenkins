@@ -10,6 +10,7 @@ type JobType int
 const (
 	Maven JobType = iota
 	Freestyle
+	Unknown
 )
 
 type (
