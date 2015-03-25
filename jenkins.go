@@ -16,6 +16,7 @@ func NewClient(baseURL *url.URL, username, password string) Jenkins {
 }
 
 func (client Client) GetJobSummaries() ([]JobSummary, error) {
+	log.Printf("jenkins.GetJobSummaries...\n")
 	if jobDescriptors, err := client.GetJobs(); err != nil {
 		return nil, err
 	} else {
@@ -33,7 +34,6 @@ func (client Client) GetJobSummaries() ([]JobSummary, error) {
 
 func (client Client) getJobSummary(jobDescriptor JobDescriptor) (JobSummary, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/job/%s/config.xml", client.baseURL.String(), jobDescriptor.Name), nil)
-	log.Printf("jenkins.getJobSummary URL: %s\n", req.URL)
 	if err != nil {
 		return JobSummary{}, err
 	}
