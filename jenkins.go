@@ -50,16 +50,25 @@ func (client Client) getJobSummary(jobDescriptor JobDescriptor) (JobSummary, err
 		return JobSummary{}, fmt.Errorf("%s", string(data))
 	}
 
+	jobType, err := getJobType(data)
+	if err != nil {
+		return JobSummary{}, err
+	}
+
 	reader := bytes.NewBuffer(data)
 
-	var maven JobConfig
-	err = xml.NewDecoder(reader).Decode(&maven)
-	if err == nil {
-		if len(maven.SCM.Branches.Branch) != 1 {
-			return JobSummary{}, fmt.Errorf("Maven-type job %s contains more than one built branch.  This is not supported.", jobDescriptor)
+	switch jobType {
+	case Maven:
+		var maven JobConfig
+		err = xml.NewDecoder(reader).Decode(&maven)
+		if err != nil {
+			return JobSummary{}, err
 		}
-		if len(maven.SCM.UserRemoteConfigs.UserRemoteConfig) > 1 {
-			return JobSummary{}, fmt.Errorf("Maven-type job %s contains more than one built branch.  This is not supported.", jobDescriptor)
+		if !buildsSingleBranch(maven.SCM) {
+			return JobSummary{}, fmt.Errorf("Maven-type job %#v contains more than one branch to build.  This is not supported.", jobDescriptor)
+		}
+		if !referencesSingleGitRepo(maven.SCM) {
+			return JobSummary{}, fmt.Errorf("Maven-type job %#v contains more than one Git repository URL.  This is not supported.", jobDescriptor)
 		}
 		return JobSummary{
 			JobType:       Maven,
@@ -67,27 +76,36 @@ func (client Client) getJobSummary(jobDescriptor JobDescriptor) (JobSummary, err
 			GitURL:        maven.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL,
 			Branch:        maven.SCM.Branches.Branch[0].Name,
 		}, nil
-	} else {
+	case Freestyle:
 		var freestyle FreeStyleJobConfig
 		err = xml.NewDecoder(reader).Decode(&freestyle)
-		if err == nil {
-			if len(freestyle.SCM.Branches.Branch) != 1 {
-				return JobSummary{}, fmt.Errorf("Freestyle-type job %s contains more than one built branch.  This is not supported.", jobDescriptor)
-			}
-			if len(freestyle.SCM.UserRemoteConfigs.UserRemoteConfig) > 1 {
-				return JobSummary{}, fmt.Errorf("Freestyle-type job %s contains more than one built branch.  This is not supported.", jobDescriptor)
-			}
-			return JobSummary{
-				JobType:       Freestyle,
-				JobDescriptor: jobDescriptor,
-				GitURL:        freestyle.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL,
-				Branch:        freestyle.SCM.Branches.Branch[0].Name,
-			}, nil
-		} else {
-			return JobSummary{}, nil
+		if err != nil {
+			return JobSummary{}, err
 		}
+		if !buildsSingleBranch(freestyle.SCM) {
+			return JobSummary{}, fmt.Errorf("Freestyle-type job %s contains more than one branch to build.  This is not supported.", jobDescriptor)
+		}
+		if !referencesSingleGitRepo(freestyle.SCM) {
+			return JobSummary{}, fmt.Errorf("Freestyle-type job %s contains more than one Git repository URL.  This is not supported.", jobDescriptor)
+		}
+		return JobSummary{
+			JobType:       Freestyle,
+			JobDescriptor: jobDescriptor,
+			GitURL:        freestyle.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL,
+			Branch:        freestyle.SCM.Branches.Branch[0].Name,
+		}, nil
+	case Unknown:
+		return JobSummary{}, fmt.Errorf("Unsupported job type for job name: %s\n", jobDescriptor.Name)
 	}
+	return JobSummary{}, fmt.Errorf("Unhandled job type for job name: %s\n", jobDescriptor.Name)
+}
 
+func buildsSingleBranch(scmInfo Scm) bool {
+	return len(scmInfo.Branches.Branch) == 1
+}
+
+func referencesSingleGitRepo(scmInfo Scm) bool {
+	return len(scmInfo.UserRemoteConfigs.UserRemoteConfig) == 1
 }
 
 // GetJobs retrieves the set of Jenkins jobs as a map indexed by job name.
@@ -216,4 +234,28 @@ func consumeResponse(req *http.Request) (int, []byte, error) {
 	}
 	defer response.Body.Close()
 	return response.StatusCode, data, nil
+}
+
+func getJobType(xmlDocument []byte) (JobType, error) {
+	decoder := xml.NewDecoder(bytes.NewBuffer(xmlDocument))
+
+	var t string
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			return Unknown, err
+		}
+		if v, ok := token.(xml.StartElement); ok {
+			t = v.Name.Local
+			break
+		}
+	}
+
+	switch t {
+	case "maven2-moduleset":
+		return Maven, nil
+	case "project":
+		return Freestyle, nil
+	}
+	return Unknown, nil
 }

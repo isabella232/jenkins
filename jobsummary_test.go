@@ -8,8 +8,7 @@ import (
 	"testing"
 )
 
-var (
-	jobConfig string = `
+var jobConfig1 string = `
 <?xml version='1.0' encoding='UTF-8'?>
 <maven2-moduleset plugin="maven-plugin@2.6">
   <actions/>
@@ -105,92 +104,31 @@ echo &quot;Hello, world</command>
   </runPostStepsIfResult>
 </maven2-moduleset>
 `
-)
 
-func TestGetJobConfig(t *testing.T) {
+func TestJobSummary(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		url := *r.URL
 		if url.Path != "/job/thejob/config.xml" {
-			t.Fatalf("GetJobs() URL path expected to end with config.xml: %s\n", url.Path)
+			t.Fatalf("getJobSummary() URL path expected to end with config.xml: %s\n", url.Path)
 		}
 		if r.Header.Get("Accept") != "application/xml" {
-			t.Fatalf("GetJobs() expected request Accept header to be application/xml but found %s\n", r.Header.Get("Accept"))
+			t.Fatalf("getJobSummary() expected request Accept header to be application/xml but found %s\n", r.Header.Get("Accept"))
 		}
 		if r.Header.Get("Authorization") != "Basic dTpw" {
 			t.Fatalf("Want Basic dTpw but got %s\n", r.Header.Get("Authorization"))
 		}
-		fmt.Fprintln(w, jobConfig)
+		fmt.Fprintln(w, jobConfig1)
 	}))
 	defer testServer.Close()
 
 	url, _ := url.Parse(testServer.URL)
-	jenkinsClient := NewClient(url, "u", "p")
-	cfg, err := jenkinsClient.GetJobConfig("thejob")
+	jenkinsClient := Client{baseURL: url, userName: "u", password: "p"}
+	summary, err := jenkinsClient.getJobSummary(JobDescriptor{Name: "thejob"})
 	if err != nil {
-		t.Fatalf("GetJobConfig() not expecting an error, but received: %v\n", err)
+		t.Fatalf("Unexpected error: %v\n", err)
 	}
-
-	if cfg.JobName != "thejob" {
-		t.Fatalf("Wanted job name thejob but found: %v\n", cfg.JobName)
+	if summary.JobDescriptor.Name != "thejob" {
+		t.Fatalf("Want thejob but got: %s\n", summary.JobDescriptor.Name)
 	}
-
-	if cfg.SCM.Class != "hudson.plugins.git.GitSCM" {
-		t.Fatalf("Wanted SCM.Class == hudson.plugins.git.GitSCM but found %d\n", cfg.SCM.Class)
-	}
-
-	if cfg.RootModule.GroupID != "com.example.widgets" {
-		t.Fatalf("Wanted RootModule.GroupID == com.example.com but found %d\n", cfg.RootModule.GroupID)
-	}
-
-	if cfg.RootModule.ArtifactID != "widge" {
-		t.Fatalf("Wanted RootModule.ArtifactID == widge but found %d\n", cfg.RootModule.ArtifactID)
-	}
-
-	if len(cfg.Publishers.RedeployPublishers) != 1 {
-		t.Fatalf("Wanted Publishers.RedeployPublishers slice of length 1 but found %d\n", len(cfg.Publishers.RedeployPublishers))
-	}
-
-	if cfg.Publishers.RedeployPublishers[0].URL != "http://nexus.example.com/nexus/content/repositories/snapshots/" {
-		t.Fatalf("Wanted Publishers.RedeployPublishers[0].URL == http://nexus.example.com/nexus/content/repositories/snapshots/ but found %s\n", len(cfg.Publishers.RedeployPublishers[0].URL))
-	}
-
-	if len(cfg.SCM.UserRemoteConfigs.UserRemoteConfig) != 1 {
-		t.Fatalf("Wanted len(SCM.UserRemoteConfigs.UserRemoteConfig) == 1 but found %d\n", len(cfg.SCM.UserRemoteConfigs.UserRemoteConfig))
-	}
-
-	if cfg.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL != "ssh://example.com/proj/cool.git" {
-		t.Fatalf("Wanted SCM.UserRemoteConfigs[0].UserRemoteConfig.URL == ssh://example.com/proj/cool.git but found %s\n", len(cfg.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL))
-	}
-
-	if len(cfg.SCM.Branches.Branch) != 1 {
-		t.Fatalf("Wanted len(SCM.Branches.Branch) == 1 but found %d\n", len(cfg.SCM.Branches.Branch))
-	}
-
-	if cfg.SCM.Branches.Branch[0].Name != "origin/develop" {
-		t.Fatalf("Wanted SCM.Branches.Branch[0].Name == origin/develop but found %d\n", cfg.SCM.Branches.Branch[0].Name)
-	}
-}
-
-func TestGetJobConfig500(t *testing.T) {
-	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		url := *r.URL
-		if url.Path != "/job/thejob/config.xml" {
-			t.Fatalf("GetJobs() URL path expected to end with config.xml: %s\n", url.Path)
-		}
-		if r.Header.Get("Accept") != "application/xml" {
-			t.Fatalf("GetJobs() expected request Accept header to be application/xml but found %s\n", r.Header.Get("Accept"))
-		}
-		if r.Header.Get("Authorization") != "Basic dTpw" {
-			t.Fatalf("Want Basic dTpw but got %s\n", r.Header.Get("Authorization"))
-		}
-		w.WriteHeader(500)
-	}))
-	defer testServer.Close()
-
-	url, _ := url.Parse(testServer.URL)
-	jenkinsClient := NewClient(url, "u", "p")
-	if _, err := jenkinsClient.GetJobConfig("thejob"); err == nil {
-		t.Fatalf("GetJobConfig() expecting an error, but received none\n")
-	}
-
+	fmt.Printf("summary: %v\n", summary)
 }
