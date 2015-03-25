@@ -130,5 +130,13 @@ func TestJobSummary(t *testing.T) {
 	if summary.JobDescriptor.Name != "thejob" {
 		t.Fatalf("Want thejob but got: %s\n", summary.JobDescriptor.Name)
 	}
-	fmt.Printf("summary: %v\n", summary)
+	if summary.JobType != Maven {
+		t.Fatalf("Want Maven type but got: %s\n", summary.JobType)
+	}
+	if summary.GitURL != "ssh://example.com/proj/cool.git" {
+		t.Fatalf("Want ssh://example.com/proj/cool.git type but got: %s\n", summary.GitURL)
+	}
+	if summary.Branch != "origin/develop" {
+		t.Fatalf("Want origin/develop type but got: %s\n", summary.Branch)
+	}
 }
