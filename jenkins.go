@@ -94,8 +94,6 @@ func (client Client) getJobSummary(jobDescriptor JobDescriptor) (JobSummary, err
 			GitURL:        freestyle.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL,
 			Branch:        freestyle.SCM.Branches.Branch[0].Name,
 		}, nil
-	case Unknown:
-		return JobSummary{}, fmt.Errorf("Unsupported job type for job name: %s\n", jobDescriptor.Name)
 	}
 	return JobSummary{}, fmt.Errorf("Unhandled job type for job name: %s\n", jobDescriptor.Name)
 }
