@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 func NewClient(baseURL *url.URL, username, password string) Jenkins {
@@ -70,10 +71,16 @@ func (client Client) getJobSummary(jobDescriptor JobDescriptor) (JobSummary, err
 		if !referencesSingleGitRepo(maven.SCM) {
 			return JobSummary{}, fmt.Errorf("Maven-type job %#v contains more than one Git repository URL.  This is not supported.", jobDescriptor)
 		}
+
+		gitURL := maven.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL
+		if !strings.HasPrefix(gitURL, "ssh://") {
+			return JobSummary{}, fmt.Errorf("Only ssh:// Git URLs are supported.", jobDescriptor)
+		}
+
 		return JobSummary{
 			JobType:       Maven,
 			JobDescriptor: jobDescriptor,
-			GitURL:        maven.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL,
+			GitURL:        gitURL,
 			Branch:        maven.SCM.Branches.Branch[0].Name,
 		}, nil
 	case Freestyle:
@@ -88,10 +95,15 @@ func (client Client) getJobSummary(jobDescriptor JobDescriptor) (JobSummary, err
 		if !referencesSingleGitRepo(freestyle.SCM) {
 			return JobSummary{}, fmt.Errorf("Freestyle-type job %s contains more than one Git repository URL.  This is not supported.", jobDescriptor)
 		}
+
+		gitURL := freestyle.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL
+		if !strings.HasPrefix(gitURL, "ssh://") {
+			return JobSummary{}, fmt.Errorf("Only ssh:// Git URLs are supported.", jobDescriptor)
+		}
 		return JobSummary{
 			JobType:       Freestyle,
 			JobDescriptor: jobDescriptor,
-			GitURL:        freestyle.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL,
+			GitURL:        gitURL,
 			Branch:        freestyle.SCM.Branches.Branch[0].Name,
 		}, nil
 	}
