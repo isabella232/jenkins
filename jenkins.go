@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"github.com/ae6rt/retry"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 func NewClient(baseURL *url.URL, username, password string) Jenkins {
@@ -34,21 +36,32 @@ func (client Client) GetJobSummaries() ([]JobSummary, error) {
 }
 
 func (client Client) getJobSummary(jobDescriptor JobDescriptor) (JobSummary, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/job/%s/config.xml", client.baseURL.String(), jobDescriptor.Name), nil)
-	if err != nil {
-		return JobSummary{}, err
-	}
-	req.Header.Set("Accept", "application/xml")
-	req.SetBasicAuth(client.userName, client.password)
+	retry := retry.New(3*time.Second, 3, retry.DefaultBackoffFunc)
 
-	responseCode, data, err := consumeResponse(req)
-	if err != nil {
-		return JobSummary{}, err
-	}
+	var data []byte
+	work := func() error {
+		req, err := http.NewRequest("GET", fmt.Sprintf("%s/job/%s/config.xml", client.baseURL.String(), jobDescriptor.Name), nil)
+		if err != nil {
+			return err
+		}
+		req.Header.Set("Accept", "application/xml")
+		req.SetBasicAuth(client.userName, client.password)
 
-	if responseCode != http.StatusOK {
-		log.Printf("%s", string(data))
-		return JobSummary{}, fmt.Errorf("%s", string(data))
+		var responseCode int
+		responseCode, data, err = consumeResponse(req)
+		if err != nil {
+			return err
+		}
+
+		if responseCode != http.StatusOK {
+			log.Printf("%s", string(data))
+			return fmt.Errorf("%s", string(data))
+		}
+		return nil
+	}
+	
+	if err := retry.Try(work); err != nil {
+		return JobSummary{}, err
 	}
 
 	jobType, err := getJobType(data)
@@ -120,27 +133,38 @@ func referencesSingleGitRepo(scmInfo Scm) bool {
 
 // GetJobs retrieves the set of Jenkins jobs as a map indexed by job name.
 func (client Client) GetJobs() (map[string]JobDescriptor, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/json/jobs", client.baseURL.String()), nil)
-	log.Printf("jenkins.GetJobs URL: %s\n", req.URL)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Accept", "application/json")
-	req.SetBasicAuth(client.userName, client.password)
+	retry := retry.New(3*time.Second, 3, retry.DefaultBackoffFunc)
 
-	responseCode, data, err := consumeResponse(req)
-	if err != nil {
-		return nil, err
+	var data []byte
+	work := func() error {
+		req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/json/jobs", client.baseURL.String()), nil)
+		log.Printf("jenkins.GetJobs URL: %s\n", req.URL)
+		if err != nil {
+			return err
+		}
+		req.Header.Set("Accept", "application/json")
+		req.SetBasicAuth(client.userName, client.password)
+
+		var responseCode int
+		responseCode, data, err = consumeResponse(req)
+		if err != nil {
+			return err
+		}
+
+		if responseCode != http.StatusOK {
+			log.Printf("%s", string(data))
+			return fmt.Errorf("%s", string(data))
+		}
+
+		return nil
 	}
 
-	if responseCode != http.StatusOK {
-		log.Printf("%s", string(data))
-		return nil, fmt.Errorf("%s", string(data))
+	if err := retry.Try(work); err != nil {
+		return nil, err
 	}
 
 	var t Jobs
-	err = json.Unmarshal(data, &t)
-	if err != nil {
+	if err := json.Unmarshal(data, &t); err != nil {
 		return nil, err
 	}
 
@@ -153,22 +177,32 @@ func (client Client) GetJobs() (map[string]JobDescriptor, error) {
 
 // GetJobConfig retrieves the Jenkins jobs config for the named job.
 func (client Client) GetJobConfig(jobName string) (JobConfig, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/job/%s/config.xml", client.baseURL.String(), jobName), nil)
-	log.Printf("jenkins.GetJobConfig URL: %s\n", req.URL)
-	if err != nil {
-		return JobConfig{}, err
-	}
-	req.Header.Set("Accept", "application/xml")
-	req.SetBasicAuth(client.userName, client.password)
+	retry := retry.New(3*time.Second, 3, retry.DefaultBackoffFunc)
 
-	responseCode, data, err := consumeResponse(req)
-	if err != nil {
-		return JobConfig{}, err
-	}
+	var data []byte
+	work := func() error {
+		req, err := http.NewRequest("GET", fmt.Sprintf("%s/job/%s/config.xml", client.baseURL.String(), jobName), nil)
+		log.Printf("jenkins.GetJobConfig URL: %s\n", req.URL)
+		if err != nil {
+			return err
+		}
+		req.Header.Set("Accept", "application/xml")
+		req.SetBasicAuth(client.userName, client.password)
 
-	if responseCode != http.StatusOK {
-		log.Printf("%s", string(data))
-		return JobConfig{}, fmt.Errorf("%s", string(data))
+		var responseCode int
+		responseCode, data, err = consumeResponse(req)
+		if err != nil {
+			return err
+		}
+
+		if responseCode != http.StatusOK {
+			log.Printf("%s", string(data))
+			return fmt.Errorf("%s", string(data))
+		}
+		return nil
+	}
+	if err := retry.Try(work); err != nil {
+		return JobConfig{}, err
 	}
 
 	var config JobConfig
@@ -202,22 +236,26 @@ func (client Client) CreateJob(jobName, jobConfigXML string) error {
 
 // DeleteJob creates a Jenkins job with the given name for the given XML job config.
 func (client Client) DeleteJob(jobName string) error {
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/job/%s/doDelete", client.baseURL.String(), jobName), bytes.NewBuffer([]byte("")))
-	log.Printf("jenkins.DeleteJob URL: %s\n", req.URL)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-type", "application/xml")
-	req.SetBasicAuth(client.userName, client.password)
+	retry := retry.New(3*time.Second, 3, retry.DefaultBackoffFunc)
+	work := func() error {
+		req, err := http.NewRequest("POST", fmt.Sprintf("%s/job/%s/doDelete", client.baseURL.String(), jobName), bytes.NewBuffer([]byte("")))
+		log.Printf("jenkins.DeleteJob URL: %s\n", req.URL)
+		if err != nil {
+			return err
+		}
+		req.Header.Set("Content-type", "application/xml")
+		req.SetBasicAuth(client.userName, client.password)
 
-	responseCode, data, err := consumeResponse(req)
-	if err != nil {
-		return err
+		responseCode, data, err := consumeResponse(req)
+		if err != nil {
+			return err
+		}
+		if responseCode != http.StatusFound {
+			return fmt.Errorf("Error deleting Jenkins job.  Status code: %d, response=%s\n", responseCode, string(data))
+		}
+		return nil
 	}
-	if responseCode != http.StatusFound {
-		return fmt.Errorf("Error deleting Jenkins job.  Status code: %d, response=%s\n", responseCode, string(data))
-	}
-	return nil
+	return retry.Try(work)
 }
 
 func consumeResponse(req *http.Request) (int, []byte, error) {
