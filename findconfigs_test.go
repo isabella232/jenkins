@@ -29,17 +29,17 @@ func TestFindConfigFiles(t *testing.T) {
 		        0  08-25-15 08:49   a/b/
 		        0  08-25-15 08:49   a/b/c/
 		        0  08-25-15 09:28   a/b/c/config.xml/
-		        0  08-25-15 09:28   a/b/c/config.xml/other.txt
-		        0  08-25-15 08:49   a/b/config.xml
-		      755  08-25-15 11:32   a/config.xml           <<< want this one
+		        0  08-25-15 09:28   a/b/c/config.xml/other.txt   <<< is a directory
+		        0  08-25-15 08:49   a/b/config.xml               <<< too deep
+		      755  08-25-15 11:32   a/config.xml                 <<< want this one
 		        0  08-25-15 08:50   config.xml
 		        0  08-25-15 11:32   x/
-		     1159  08-25-15 11:32   x/config.xml           <<<< and want this one
+		     1159  08-25-15 11:32   x/config.xml                 <<< and want this one
 		 --------                   -------
 		     1914                   10 files
 	*/
 
-	configs, err := findJobs(root)
+	configs, err := findJobsInFilesystem(root)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v\n", err)
 	}

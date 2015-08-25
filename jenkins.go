@@ -22,7 +22,7 @@ func NewClient(baseURL *url.URL, username, password string) Jenkins {
 }
 
 func (client Client) GetJobSummariesFromFilesystem(root string) ([]JobSummary, error) {
-	log.Printf("jenkins.GetJobSummariesFromFilesystem from %s...\n", root)
+	log.Printf("jenkins.GetJobSummariesFromFilesystem from %s\n", root)
 
 	if exists, err := dirExists(root); err != nil || !exists {
 		if err != nil {
@@ -32,7 +32,7 @@ func (client Client) GetJobSummariesFromFilesystem(root string) ([]JobSummary, e
 		}
 	}
 
-	jobConfigFiles, err := findJobs(root)
+	jobConfigFiles, err := findJobsInFilesystem(root)
 	if err != nil {
 		return nil, err
 	}
@@ -312,21 +312,26 @@ func dirExists(dirPath string) (bool, error) {
 	return true, nil
 }
 
-// findJobs is similar to "find <dir> -name somename -maxdepth d.  We strictly want files at exactly depth.
+// findJobsInFilesystem is similar to "find <dir> -name somename -maxdepth d.  We strictly want files at exactly depth.
 // Seeking jobname/config.xml:  resides one level below root
 // Discard config.xml:  resides at root
 // Discard jobname/a/b/config.xml:  resides more than one level below root
-func findJobs(root string) ([]string, error) {
+func findJobsInFilesystem(root string) ([]string, error) {
 	files := make([]string, 0)
 	markFn := func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
+
+		// record this as a too-deep path we never want to traverse again
 		if info.IsDir() && strings.Count(path, "/") > 1 {
 			return filepath.SkipDir
 		}
+
+		// We compare again the depth to 1 because ./config.xml is an undesirable possibility.  For jenkins jobs,
+		//  if root is /srv/jenkins/jobs, /srv/jenkins/jobs/config.xml is not a job config, whatever else it may be.
 		if strings.Count(path, "/") == 1 && info.Mode().IsRegular() && info.Name() == "config.xml" {
-			files = append(files, root + "/" + path)
+			files = append(files, root+"/"+path)
 		}
 		return nil
 	}
@@ -338,14 +343,16 @@ func findJobs(root string) ([]string, error) {
 	defer func() {
 		err := os.Chdir(pwd)
 		if err != nil {
-			log.Printf("jenkins.findJobs() cannot restore working directory to %s\n", pwd)
+			log.Printf("jenkins.findJobsInFilesystem() cannot restore working directory to %s: %v\n", pwd, err)
 		}
 	}()
 
+	// Change directory to root so we have no need to know how many "/" root itself contains.
 	if err := os.Chdir(root); err != nil {
 		return nil, err
 	}
 
+	// Walk relative to root.
 	err = filepath.Walk(".", markFn)
 	if err != nil {
 		return nil, err
