@@ -316,6 +316,7 @@ func dirExists(dirPath string) (bool, error) {
 // Seeking jobname/config.xml:  resides one level below root
 // Discard config.xml:  resides at root
 // Discard jobname/a/b/config.xml:  resides more than one level below root
+// @root is the jobs directory, with a typical value of something like /srv/jenkins/jobs
 func findJobsInFilesystem(root string) ([]string, error) {
 	files := make([]string, 0)
 	markFn := func(path string, info os.FileInfo, err error) error {
