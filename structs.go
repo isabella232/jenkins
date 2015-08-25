@@ -18,6 +18,7 @@ type (
 		GetJobs() (map[string]JobDescriptor, error)
 		GetJobConfig(jobName string) (JobConfig, error)
 		GetJobSummaries() ([]JobSummary, error)
+		GetJobSummariesFromFilesystem(root string) ([]JobSummary, error)
 		CreateJob(jobName, jobConfigXML string) error
 		DeleteJob(jobName string) error
 	}

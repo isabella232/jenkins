@@ -5,17 +5,46 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/ae6rt/retry"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/ae6rt/retry"
 )
 
 func NewClient(baseURL *url.URL, username, password string) Jenkins {
 	return Client{baseURL: baseURL, userName: username, password: password}
+}
+
+func (client Client) GetJobSummariesFromFilesystem(root string) ([]JobSummary, error) {
+	log.Printf("jenkins.GetJobSummariesFromFilesystem from %s...\n", root)
+
+	if exists, err := dirExists(root); err != nil || !exists {
+		if err != nil {
+			return nil, err
+		} else {
+			return nil, fmt.Errorf("jenkins.GetJobSummariesFromFilesystem: root directory %s does not exist.\n", root)
+		}
+	}
+
+	if jobDescriptors, err := client.GetJobs(); err != nil {
+		return nil, err
+	} else {
+		summaries := make([]JobSummary, 0)
+		for _, jobDescriptor := range jobDescriptors {
+			if jobSummary, err := client.getJobSummary(jobDescriptor); err != nil {
+				continue
+			} else {
+				summaries = append(summaries, jobSummary)
+			}
+		}
+		return summaries, nil
+	}
 }
 
 func (client Client) GetJobSummaries() ([]JobSummary, error) {
@@ -59,7 +88,7 @@ func (client Client) getJobSummary(jobDescriptor JobDescriptor) (JobSummary, err
 		}
 		return nil
 	}
-	
+
 	if err := retry.Try(work); err != nil {
 		return JobSummary{}, err
 	}
@@ -306,4 +335,46 @@ func getJobType(xmlDocument []byte) (JobType, error) {
 		return Freestyle, nil
 	}
 	return Unknown, nil
+}
+
+func dirExists(dirPath string) (bool, error) {
+	if _, err := os.Stat(dirPath); err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		} else {
+			return false, err
+		}
+	}
+	return true, nil
+}
+
+// findJobs is similar to "find <dir> -name somename -maxdepth d.
+// Seeking jobname/config.xml:  resides in one level below root
+// Discard config.xml:  resides at root
+// Discard jobname/a/b/config.xml:  resides more than one level below root
+func findJobs(root, fileName string, maxDepth int) ([]string, error) {
+	files := make([]string, 0)
+	markFn := func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() && strings.Count(path, "/") >= maxDepth {
+			return filepath.SkipDir
+		}
+		if strings.Count(path, "/") == maxDepth-1 && info.Mode().IsRegular() && info.Name() == fileName {
+			files = append(files, path)
+		}
+		return nil
+	}
+
+	if err := os.Chdir(root); err != nil {
+		return nil, err
+	}
+
+	err := filepath.Walk(".", markFn)
+	if err != nil {
+		return nil, err
+	}
+
+	return files, nil
 }
