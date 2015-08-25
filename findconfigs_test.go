@@ -91,15 +91,20 @@ func extractTestConfigs() (string, error) {
 	return name, nil
 }
 
-func TestJobNameFromConfigFileName(t *testing.T) {
-	jobName, err := jobNameFromConfigFileName("path1/path2/pathN/jobname/config.xml")
-	if err != nil {
-		t.Fatalf("Unexpected error: %s\n", err)
+func TestValidJobNameFromConfigFileName(t *testing.T) {
+	for _, v := range []string{"path1/path2/pathN/jobname/config.xml", "./jobname/config.xml"} {
+		jobName, err := jobNameFromConfigFileName(v)
+		if err != nil {
+			t.Fatalf("Unexpected error: %s\n", err)
+		}
+		if jobName != "jobname" {
+			t.Fatalf("Want jobname but got %s\n", jobName)
+		}
 	}
-	if jobName != "jobname" {
-		t.Fatalf("Want jobname but got %s\n", jobName)
-	}
+}
 
+func TestInValidJobNameFromConfigFileName(t *testing.T) {
+	var err error
 	_, err = jobNameFromConfigFileName("path1/path2/pathN/jobname/notaconfig.xml")
 	if err == nil {
 		t.Fatalf("Expected error.  Last path token is not config.xml.")

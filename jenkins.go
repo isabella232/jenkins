@@ -51,7 +51,7 @@ func (client Client) GetJobSummariesFromFilesystem(root string) ([]JobSummary, e
 			log.Printf("Cannot read config file %s: %v.  Skipping.\n", configFile, err)
 			continue
 		}
-		jobSummary, err := getSummaryFromBytes(data, jobDescriptor)
+		jobSummary, err := getSummaryFromConfigBytes(data, jobDescriptor)
 		if err != nil {
 			log.Printf("Cannot get job summary from config file data %s: %v.  Skipping.\n", configFile, err)
 			continue
@@ -107,63 +107,11 @@ func (client Client) getJobSummary(jobDescriptor JobDescriptor) (JobSummary, err
 		return JobSummary{}, err
 	}
 
-	jobType, err := getJobType(data)
+	summary, err := getSummaryFromConfigBytes(data, jobDescriptor)
 	if err != nil {
 		return JobSummary{}, err
 	}
-
-	reader := bytes.NewBuffer(data)
-
-	switch jobType {
-	case Maven:
-		var maven JobConfig
-		err = xml.NewDecoder(reader).Decode(&maven)
-		if err != nil {
-			return JobSummary{}, err
-		}
-		if !buildsSingleBranch(maven.SCM) {
-			return JobSummary{}, fmt.Errorf("Maven-type job %#v contains more than one branch to build.  This is not supported.", jobDescriptor)
-		}
-		if !referencesSingleGitRepo(maven.SCM) {
-			return JobSummary{}, fmt.Errorf("Maven-type job %#v contains more than one Git repository URL.  This is not supported.", jobDescriptor)
-		}
-
-		gitURL := maven.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL
-		if !strings.HasPrefix(gitURL, "ssh://") {
-			return JobSummary{}, fmt.Errorf("Only ssh:// Git URLs are supported.", jobDescriptor)
-		}
-
-		return JobSummary{
-			JobType:       Maven,
-			JobDescriptor: jobDescriptor,
-			GitURL:        gitURL,
-			Branch:        maven.SCM.Branches.Branch[0].Name,
-		}, nil
-	case Freestyle:
-		var freestyle FreeStyleJobConfig
-		err = xml.NewDecoder(reader).Decode(&freestyle)
-		if err != nil {
-			return JobSummary{}, err
-		}
-		if !buildsSingleBranch(freestyle.SCM) {
-			return JobSummary{}, fmt.Errorf("Freestyle-type job %s contains more than one branch to build.  This is not supported.", jobDescriptor)
-		}
-		if !referencesSingleGitRepo(freestyle.SCM) {
-			return JobSummary{}, fmt.Errorf("Freestyle-type job %s contains more than one Git repository URL.  This is not supported.", jobDescriptor)
-		}
-
-		gitURL := freestyle.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL
-		if !strings.HasPrefix(gitURL, "ssh://") {
-			return JobSummary{}, fmt.Errorf("Only ssh:// Git URLs are supported.", jobDescriptor)
-		}
-		return JobSummary{
-			JobType:       Freestyle,
-			JobDescriptor: jobDescriptor,
-			GitURL:        gitURL,
-			Branch:        freestyle.SCM.Branches.Branch[0].Name,
-		}, nil
-	}
-	return JobSummary{}, fmt.Errorf("Unhandled job type for job name: %s\n", jobDescriptor.Name)
+	return summary, nil
 }
 
 func buildsSingleBranch(scmInfo Scm) bool {
@@ -386,7 +334,10 @@ func findJobs(root, fileName string, depth int) ([]string, error) {
 		return nil, err
 	}
 	defer func() {
-		os.Chdir(pwd)
+		err := os.Chdir(pwd)
+		if err != nil {
+			log.Printf("jenkins.findJobs() cannot restore working directory to %s\n", pwd)
+		}
 	}()
 
 	if err := os.Chdir(root); err != nil {
@@ -401,7 +352,7 @@ func findJobs(root, fileName string, depth int) ([]string, error) {
 	return files, nil
 }
 
-func getSummaryFromBytes(data []byte, jobDescriptor JobDescriptor) (JobSummary, error) {
+func getSummaryFromConfigBytes(data []byte, jobDescriptor JobDescriptor) (JobSummary, error) {
 
 	jobType, err := getJobType(data)
 	if err != nil {
@@ -471,5 +422,5 @@ func jobNameFromConfigFileName(configFileName string) (string, error) {
 	if parts[len(parts)-1] != "config.xml" {
 		return "", fmt.Errorf("Job config file name does not end in config.xml: %s", configFileName)
 	}
-	return parts[len(parts) - 2], nil
+	return parts[len(parts)-2], nil
 }
