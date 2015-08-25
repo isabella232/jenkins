@@ -25,27 +25,34 @@ func TestFindConfigFiles(t *testing.T) {
 		$ unzip -l test-config-files.zip
 		  Length     Date   Time    Name
 		 --------    ----   ----    ----
-				0  08-25-15 08:49   a/
-				0  08-25-15 08:49   a/b/
-				0  08-25-15 08:49   a/b/c/
-				0  08-25-15 09:28   a/b/c/config.xml/
-				0  08-25-15 09:28   a/b/c/config.xml/other.txt
-				0  08-25-15 08:49   a/b/config.xml
-				0  08-25-15 08:49   a/config.xml           <<<<<<<<<<< this is the only file that should be returned
-				0  08-25-15 08:50   config.xml
+		        0  08-25-15 11:32   a/
+		        0  08-25-15 08:49   a/b/
+		        0  08-25-15 08:49   a/b/c/
+		        0  08-25-15 09:28   a/b/c/config.xml/
+		        0  08-25-15 09:28   a/b/c/config.xml/other.txt
+		        0  08-25-15 08:49   a/b/config.xml
+		      755  08-25-15 11:32   a/config.xml           <<< want this one
+		        0  08-25-15 08:50   config.xml
+		        0  08-25-15 11:32   x/
+		     1159  08-25-15 11:32   x/config.xml           <<<< and want this one
 		 --------                   -------
-				0                   8 files
+		     1914                   10 files
 	*/
 
 	configs, err := findJobs(root)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v\n", err)
 	}
-	if len(configs) != 1 {
-		t.Fatalf("want 1 but got %d\n", len(configs))
+	if len(configs) != 2 {
+		t.Fatalf("want 2 but got %d\n", len(configs))
 	}
-	if configs[0] != root + "/" + "a/config.xml" {
-		t.Fatalf("want <root>/a/config.xml but got %s\n", configs[0])
+
+	if configs[0] != root+"/"+"a/config.xml" && configs[0] != root+"/"+"x/config.xml" {
+		t.Fatalf("want <root>/[a|x]/config.xml but got %s\n", configs[0])
+	}
+
+	if configs[1] != root+"/"+"a/config.xml" && configs[1] != root+"/"+"x/config.xml" {
+		t.Fatalf("want <root>/[a|x]/config.xml but got %s\n", configs[1])
 	}
 }
 
