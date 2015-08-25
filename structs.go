@@ -32,7 +32,6 @@ type (
 
 	JobDescriptor struct {
 		Name string `json:"name"`
-		URL  string `json:"url"`
 	}
 
 	Jobs struct {

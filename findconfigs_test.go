@@ -37,7 +37,7 @@ func TestFindConfigFiles(t *testing.T) {
 				0                   8 files
 	*/
 
-	configs, err := findJobs(root, "config.xml", 2)
+	configs, err := findJobs(root, "config.xml", 1)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v\n", err)
 	}
@@ -89,4 +89,24 @@ func extractTestConfigs() (string, error) {
 		dst.Close()
 	}
 	return name, nil
+}
+
+func TestJobNameFromConfigFileName(t *testing.T) {
+	jobName, err := jobNameFromConfigFileName("path1/path2/pathN/jobname/config.xml")
+	if err != nil {
+		t.Fatalf("Unexpected error: %s\n", err)
+	}
+	if jobName != "jobname" {
+		t.Fatalf("Want jobname but got %s\n", jobName)
+	}
+
+	_, err = jobNameFromConfigFileName("path1/path2/pathN/jobname/notaconfig.xml")
+	if err == nil {
+		t.Fatalf("Expected error.  Last path token is not config.xml.")
+	}
+
+	_, err = jobNameFromConfigFileName("config.xml")
+	if err == nil {
+		t.Fatalf("Expected error.  Want at least one / in job config file name.")
+	}
 }
