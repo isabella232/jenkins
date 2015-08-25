@@ -32,7 +32,7 @@ func (client Client) GetJobSummariesFromFilesystem(root string) ([]JobSummary, e
 		}
 	}
 
-	jobConfigFiles, err := findJobs(root, "config.xml", 1)
+	jobConfigFiles, err := findJobs(root)
 	if err != nil {
 		return nil, err
 	}
@@ -51,11 +51,13 @@ func (client Client) GetJobSummariesFromFilesystem(root string) ([]JobSummary, e
 			log.Printf("Cannot read config file %s: %v.  Skipping.\n", configFile, err)
 			continue
 		}
+
 		jobSummary, err := getSummaryFromConfigBytes(data, jobDescriptor)
 		if err != nil {
 			log.Printf("Cannot get job summary from config file data %s: %v.  Skipping.\n", configFile, err)
 			continue
 		}
+
 		summaries = append(summaries, jobSummary)
 	}
 	return summaries, nil
@@ -314,17 +316,17 @@ func dirExists(dirPath string) (bool, error) {
 // Seeking jobname/config.xml:  resides one level below root
 // Discard config.xml:  resides at root
 // Discard jobname/a/b/config.xml:  resides more than one level below root
-func findJobs(root, fileName string, depth int) ([]string, error) {
+func findJobs(root string) ([]string, error) {
 	files := make([]string, 0)
 	markFn := func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if info.IsDir() && strings.Count(path, "/") > depth {
+		if info.IsDir() && strings.Count(path, "/") > 1 {
 			return filepath.SkipDir
 		}
-		if strings.Count(path, "/") == depth && info.Mode().IsRegular() && info.Name() == fileName {
-			files = append(files, path)
+		if strings.Count(path, "/") == 1 && info.Mode().IsRegular() && info.Name() == "config.xml" {
+			files = append(files, root + "/" + path)
 		}
 		return nil
 	}

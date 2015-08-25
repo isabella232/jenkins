@@ -37,15 +37,15 @@ func TestFindConfigFiles(t *testing.T) {
 				0                   8 files
 	*/
 
-	configs, err := findJobs(root, "config.xml", 1)
+	configs, err := findJobs(root)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v\n", err)
 	}
 	if len(configs) != 1 {
 		t.Fatalf("want 1 but got %d\n", len(configs))
 	}
-	if configs[0] != "a/config.xml" {
-		t.Fatalf("want a/config.xml but got %s\n", configs[0])
+	if configs[0] != root + "/" + "a/config.xml" {
+		t.Fatalf("want <root>/a/config.xml but got %s\n", configs[0])
 	}
 }
 
