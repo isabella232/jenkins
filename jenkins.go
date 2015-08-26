@@ -379,10 +379,10 @@ func getSummaryFromConfigBytes(data []byte, jobDescriptor JobDescriptor) (JobSum
 			return JobSummary{}, err
 		}
 		if !buildsSingleBranch(maven.SCM) {
-			return JobSummary{}, fmt.Errorf("Maven-type job %#v contains more than one branch to build.  This is not supported.", data)
+			return JobSummary{}, fmt.Errorf("Maven-type job [%s] does not contain exactly one branch to build.  This is not supported.", jobDescriptor.Name)
 		}
 		if !referencesSingleGitRepo(maven.SCM) {
-			return JobSummary{}, fmt.Errorf("Maven-type job %#v contains more than one Git repository URL.  This is not supported.", data)
+			return JobSummary{}, fmt.Errorf("Maven-type job [%s] does not contain exactly one Git repository URL.  This is not supported.", jobDescriptor.Name)
 		}
 
 		gitURL := maven.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL
@@ -403,10 +403,10 @@ func getSummaryFromConfigBytes(data []byte, jobDescriptor JobDescriptor) (JobSum
 			return JobSummary{}, err
 		}
 		if !buildsSingleBranch(freestyle.SCM) {
-			return JobSummary{}, fmt.Errorf("Freestyle-type job %s contains more than one branch to build.  This is not supported.", jobDescriptor)
+			return JobSummary{}, fmt.Errorf("Freestyle-type job [%s] does not contain exactly one branch to build.  This is not supported.", jobDescriptor.Name)
 		}
 		if !referencesSingleGitRepo(freestyle.SCM) {
-			return JobSummary{}, fmt.Errorf("Freestyle-type job %s contains more than one Git repository URL.  This is not supported.", jobDescriptor)
+			return JobSummary{}, fmt.Errorf("Freestyle-type job [%s] does not contain exactly one Git repository URL.  This is not supported.", jobDescriptor.Name)
 		}
 
 		gitURL := freestyle.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL
