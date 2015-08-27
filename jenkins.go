@@ -56,7 +56,7 @@ func (client Client) GetJobSummariesFromFilesystem(root string) ([]JobSummary, e
 
 		jobSummary, err := getSummaryFromConfigBytes(data, jobDescriptor)
 		if err != nil {
-			Log.Printf("Cannot get job summary from config file data %s: %v.  Skipping.\n", configFile, err)
+			Log.Printf("Cannot develop a sane job summary from config file data %s: %v.  Skipping.\n", configFile, err)
 			continue
 		}
 
