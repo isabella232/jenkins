@@ -17,12 +17,14 @@ import (
 	"github.com/ae6rt/retry"
 )
 
+var Log *log.Logger = log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile)
+
 func NewClient(baseURL *url.URL, username, password string) Jenkins {
 	return Client{baseURL: baseURL, userName: username, password: password}
 }
 
 func (client Client) GetJobSummariesFromFilesystem(root string) ([]JobSummary, error) {
-	log.Printf("jenkins.GetJobSummariesFromFilesystem from %s\n", root)
+	Log.Printf("jenkins.GetJobSummariesFromFilesystem from %s\n", root)
 
 	if exists, err := dirExists(root); err != nil || !exists {
 		if err != nil {
@@ -41,20 +43,20 @@ func (client Client) GetJobSummariesFromFilesystem(root string) ([]JobSummary, e
 	for _, configFile := range jobConfigFiles {
 		jobName, err := jobNameFromConfigFileName(configFile)
 		if err != nil {
-			log.Printf("Cannot acquire job name from config file name %s: %v.  Skipping.\n", configFile, err)
+			Log.Printf("Cannot acquire job name from config file name %s: %v.  Skipping.\n", configFile, err)
 			continue
 		}
 		jobDescriptor := JobDescriptor{Name: jobName}
 
 		data, err := ioutil.ReadFile(configFile)
 		if err != nil {
-			log.Printf("Cannot read config file %s: %v.  Skipping.\n", configFile, err)
+			Log.Printf("Cannot read config file %s: %v.  Skipping.\n", configFile, err)
 			continue
 		}
 
 		jobSummary, err := getSummaryFromConfigBytes(data, jobDescriptor)
 		if err != nil {
-			log.Printf("Cannot get job summary from config file data %s: %v.  Skipping.\n", configFile, err)
+			Log.Printf("Cannot get job summary from config file data %s: %v.  Skipping.\n", configFile, err)
 			continue
 		}
 
@@ -64,7 +66,7 @@ func (client Client) GetJobSummariesFromFilesystem(root string) ([]JobSummary, e
 }
 
 func (client Client) GetJobSummaries() ([]JobSummary, error) {
-	log.Printf("jenkins.GetJobSummaries...\n")
+	Log.Printf("jenkins.GetJobSummaries...\n")
 	if jobDescriptors, err := client.GetJobs(); err != nil {
 		return nil, err
 	} else {
@@ -99,7 +101,7 @@ func (client Client) getJobSummary(jobDescriptor JobDescriptor) (JobSummary, err
 		}
 
 		if responseCode != http.StatusOK {
-			log.Printf("%s", string(data))
+			Log.Printf("%s", string(data))
 			return fmt.Errorf("%s", string(data))
 		}
 		return nil
@@ -131,7 +133,7 @@ func (client Client) GetJobs() (map[string]JobDescriptor, error) {
 	var data []byte
 	work := func() error {
 		req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/json/jobs", client.baseURL.String()), nil)
-		log.Printf("jenkins.GetJobs URL: %s\n", req.URL)
+		Log.Printf("jenkins.GetJobs URL: %s\n", req.URL)
 		if err != nil {
 			return err
 		}
@@ -145,7 +147,7 @@ func (client Client) GetJobs() (map[string]JobDescriptor, error) {
 		}
 
 		if responseCode != http.StatusOK {
-			log.Printf("%s", string(data))
+			Log.Printf("%s", string(data))
 			return fmt.Errorf("%s", string(data))
 		}
 
@@ -175,7 +177,7 @@ func (client Client) GetJobConfig(jobName string) (JobConfig, error) {
 	var data []byte
 	work := func() error {
 		req, err := http.NewRequest("GET", fmt.Sprintf("%s/job/%s/config.xml", client.baseURL.String(), jobName), nil)
-		log.Printf("jenkins.GetJobConfig URL: %s\n", req.URL)
+		Log.Printf("jenkins.GetJobConfig URL: %s\n", req.URL)
 		if err != nil {
 			return err
 		}
@@ -189,7 +191,7 @@ func (client Client) GetJobConfig(jobName string) (JobConfig, error) {
 		}
 
 		if responseCode != http.StatusOK {
-			log.Printf("%s", string(data))
+			Log.Printf("%s", string(data))
 			return fmt.Errorf("%s", string(data))
 		}
 		return nil
@@ -210,7 +212,7 @@ func (client Client) GetJobConfig(jobName string) (JobConfig, error) {
 // CreateJob creates a Jenkins job with the given name for the given XML job config.
 func (client Client) CreateJob(jobName, jobConfigXML string) error {
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/createItem?name=%s", client.baseURL.String(), jobName), bytes.NewBuffer([]byte(jobConfigXML)))
-	log.Printf("jenkins.CreateJob URL: %s\n", req.URL)
+	Log.Printf("jenkins.CreateJob URL: %s\n", req.URL)
 	if err != nil {
 		return err
 	}
@@ -232,7 +234,7 @@ func (client Client) DeleteJob(jobName string) error {
 	retry := retry.New(3*time.Second, 3, retry.DefaultBackoffFunc)
 	work := func() error {
 		req, err := http.NewRequest("POST", fmt.Sprintf("%s/job/%s/doDelete", client.baseURL.String(), jobName), bytes.NewBuffer([]byte("")))
-		log.Printf("jenkins.DeleteJob URL: %s\n", req.URL)
+		Log.Printf("jenkins.DeleteJob URL: %s\n", req.URL)
 		if err != nil {
 			return err
 		}
@@ -344,7 +346,7 @@ func findJobsInFilesystem(root string) ([]string, error) {
 	defer func() {
 		err := os.Chdir(pwd)
 		if err != nil {
-			log.Printf("jenkins.findJobsInFilesystem() cannot restore working directory to %s: %v\n", pwd, err)
+			Log.Printf("jenkins.findJobsInFilesystem() cannot restore working directory to %s: %v\n", pwd, err)
 		}
 	}()
 
