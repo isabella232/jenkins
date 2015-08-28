@@ -380,12 +380,6 @@ func getSummaryFromConfigBytes(data []byte, jobDescriptor JobDescriptor) (JobSum
 		if err != nil {
 			return JobSummary{}, err
 		}
-		if !buildsSingleBranch(maven.SCM) {
-			return JobSummary{}, fmt.Errorf("Maven-type job [%s] does not contain exactly one branch to build.  This is not supported.", jobDescriptor.Name)
-		}
-		if !referencesSingleGitRepo(maven.SCM) {
-			return JobSummary{}, fmt.Errorf("Maven-type job [%s] does not contain exactly one Git repository URL.  This is not supported.", jobDescriptor.Name)
-		}
 
 		gitURL := maven.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL
 		if !strings.HasPrefix(gitURL, "ssh://") {
@@ -395,20 +389,14 @@ func getSummaryFromConfigBytes(data []byte, jobDescriptor JobDescriptor) (JobSum
 		return JobSummary{
 			JobType:       Maven,
 			JobDescriptor: jobDescriptor,
-			GitURL:        gitURL,
-			Branch:        maven.SCM.Branches.Branch[0].Name,
+			GitURL:        "",  // the use of this field is deprecated
+			Branch:        "",  // the use of this field is deprecated
 		}, nil
 	case Freestyle:
 		var freestyle FreeStyleJobConfig
 		err = xml.NewDecoder(reader).Decode(&freestyle)
 		if err != nil {
 			return JobSummary{}, err
-		}
-		if !buildsSingleBranch(freestyle.SCM) {
-			return JobSummary{}, fmt.Errorf("Freestyle-type job [%s] does not contain exactly one branch to build.  This is not supported.", jobDescriptor.Name)
-		}
-		if !referencesSingleGitRepo(freestyle.SCM) {
-			return JobSummary{}, fmt.Errorf("Freestyle-type job [%s] does not contain exactly one Git repository URL.  This is not supported.", jobDescriptor.Name)
 		}
 
 		gitURL := freestyle.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL
@@ -418,8 +406,8 @@ func getSummaryFromConfigBytes(data []byte, jobDescriptor JobDescriptor) (JobSum
 		return JobSummary{
 			JobType:       Freestyle,
 			JobDescriptor: jobDescriptor,
-			GitURL:        gitURL,
-			Branch:        freestyle.SCM.Branches.Branch[0].Name,
+			GitURL:        "",  // the use of this field is deprecated
+			Branch:        "",  // the use of this field is deprecated
 		}, nil
 	}
 	return JobSummary{}, fmt.Errorf("Unhandled job type for job name: %s\n", jobDescriptor)

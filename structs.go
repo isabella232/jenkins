@@ -58,8 +58,8 @@ type (
 	JobSummary struct {
 		JobDescriptor JobDescriptor
 		JobType       JobType
-		GitURL        string
-		Branch        string
+		GitURL        string  // the use of this field is deprecated
+		Branch        string  // the use of this field is deprecated
 	}
 
 	Scm struct {

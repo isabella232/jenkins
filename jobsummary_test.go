@@ -299,11 +299,11 @@ func TestHttpMavenJobSummary(t *testing.T) {
 				t.Fatalf("Want Freestyle type but got: %s\n", summary.JobType)
 			}
 		}
-		if summary.GitURL != "ssh://example.com/proj/cool.git" {
-			t.Fatalf("Want ssh://example.com/proj/cool.git type but got: %s\n", summary.GitURL)
+		if summary.GitURL != "" {
+			t.Fatalf("Want empty Git URL but but got: %s\n", summary.GitURL)
 		}
-		if summary.Branch != "origin/develop" {
-			t.Fatalf("Want origin/develop type but got: %s\n", summary.Branch)
+		if summary.Branch != "" {
+			t.Fatalf("Want empty branch but got: %s\n", summary.Branch)
 		}
 
 		testServer.Close()
@@ -384,15 +384,15 @@ func TestJobSummariesFromFilesystem(t *testing.T) {
 			if v.JobType != Maven {
 				t.Fatalf("Want Maven job type but got %d\n", v.JobType)
 			}
-			if v.GitURL != "ssh://example.com/proj/cool.git" {
-				t.Fatalf("Want git URL ssh://example.com/proj/cool.git but got %d\n", v.GitURL)
+			if v.GitURL != "" {
+				t.Fatalf("Want empty git repository but got %d\n", v.GitURL)
 			}
 		case "x":
 			if v.JobType != Freestyle {
 				t.Fatalf("Want Freestyle job type but got %d\n", v.JobType)
 			}
-			if v.GitURL != "ssh://example.com/proj/cool.git" {
-				t.Fatalf("Want git URL ssh://example.com/proj/cool.git but got %d\n", v.GitURL)
+			if v.GitURL != "" {
+				t.Fatalf("Want empty git repository but got %d\n", v.GitURL)
 			}
 		}
 	}
