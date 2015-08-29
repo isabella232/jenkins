@@ -381,11 +381,6 @@ func getSummaryFromConfigBytes(data []byte, jobDescriptor JobDescriptor) (JobSum
 			return JobSummary{}, err
 		}
 
-		gitURL := maven.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL
-		if !strings.HasPrefix(gitURL, "ssh://") {
-			return JobSummary{}, fmt.Errorf("Only ssh:// Git URLs are supported %s", jobDescriptor.Name)
-		}
-
 		return JobSummary{
 			JobType:       Maven,
 			JobDescriptor: jobDescriptor,
@@ -399,10 +394,6 @@ func getSummaryFromConfigBytes(data []byte, jobDescriptor JobDescriptor) (JobSum
 			return JobSummary{}, err
 		}
 
-		gitURL := freestyle.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL
-		if !strings.HasPrefix(gitURL, "ssh://") {
-			return JobSummary{}, fmt.Errorf("Only ssh:// Git URLs are supported %s", jobDescriptor.Name)
-		}
 		return JobSummary{
 			JobType:       Freestyle,
 			JobDescriptor: jobDescriptor,
