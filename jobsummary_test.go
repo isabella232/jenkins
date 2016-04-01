@@ -292,11 +292,11 @@ func TestHttpMavenJobSummary(t *testing.T) {
 		switch jobType {
 		case "maven":
 			if summary.JobType != Maven {
-				t.Fatalf("Want Maven type but got: %s\n", summary.JobType)
+				t.Fatalf("Want Maven type but got: %v\n", summary.JobType)
 			}
 		case "freestyle":
 			if summary.JobType != Freestyle {
-				t.Fatalf("Want Freestyle type but got: %s\n", summary.JobType)
+				t.Fatalf("Want Freestyle type but got: %d\n", summary.JobType)
 			}
 		}
 		if summary.GitURL != "" {
@@ -361,14 +361,14 @@ func TestJobSummariesFromFilesystem(t *testing.T) {
 				t.Fatalf("Want Maven job type but got %d\n", v.JobType)
 			}
 			if v.GitURL != "" {
-				t.Fatalf("Want empty git repository but got %d\n", v.GitURL)
+				t.Fatalf("Want empty git repository but got %s\n", v.GitURL)
 			}
 		case "x":
 			if v.JobType != Freestyle {
 				t.Fatalf("Want Freestyle job type but got %d\n", v.JobType)
 			}
 			if v.GitURL != "" {
-				t.Fatalf("Want empty git repository but got %d\n", v.GitURL)
+				t.Fatalf("Want empty git repository but got %s\n", v.GitURL)
 			}
 		}
 	}

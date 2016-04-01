@@ -117,9 +117,9 @@ func TestCreateJenkinsJobsNoError(t *testing.T) {
 		if r.Header.Get("Content-type") != "application/xml" {
 			t.Fatalf("wanted  Content-type header application/xml but found %s\n", r.Header.Get("Content-type"))
 		}
-        if r.Header.Get("Authorization") != "Basic dTpw" {
-            t.Fatalf("Want Basic dTpw but got %s\n", r.Header.Get("Authorization"))
-        }
+		if r.Header.Get("Authorization") != "Basic dTpw" {
+			t.Fatalf("Want Basic dTpw but got %s\n", r.Header.Get("Authorization"))
+		}
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			t.Fatalf("error reading POST body: %v\n", err)
@@ -151,9 +151,9 @@ func TestCreateJenkinsJobs500(t *testing.T) {
 		if r.Header.Get("Content-type") != "application/xml" {
 			t.Fatalf("wanted  Content-type header application/xml but found %s\n", r.Header.Get("Content-type"))
 		}
-        if r.Header.Get("Authorization") != "Basic dTpw" {
-            t.Fatalf("Want Basic dTpw but got %s\n", r.Header.Get("Authorization"))
-        }
+		if r.Header.Get("Authorization") != "Basic dTpw" {
+			t.Fatalf("Want Basic dTpw but got %s\n", r.Header.Get("Authorization"))
+		}
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			t.Fatalf("error reading POST body: %v\n", err)
@@ -166,7 +166,7 @@ func TestCreateJenkinsJobs500(t *testing.T) {
 	defer testServer.Close()
 
 	url, _ := url.Parse(testServer.URL)
-    jenkinsClient := NewClient(url, "u", "p")
+	jenkinsClient := NewClient(url, "u", "p")
 	if err := jenkinsClient.CreateJob("job-name", fooJob); err == nil {
 		t.Fatalf("JenkinsJobCreate() expecting an error, but received none\n")
 	}

@@ -384,8 +384,8 @@ func getSummaryFromConfigBytes(data []byte, jobDescriptor JobDescriptor) (JobSum
 		return JobSummary{
 			JobType:       Maven,
 			JobDescriptor: jobDescriptor,
-			GitURL:        "",  // the use of this field is deprecated
-			Branch:        "",  // the use of this field is deprecated
+			GitURL:        "", // the use of this field is deprecated
+			Branch:        "", // the use of this field is deprecated
 		}, nil
 	case Freestyle:
 		var freestyle FreeStyleJobConfig
@@ -397,8 +397,8 @@ func getSummaryFromConfigBytes(data []byte, jobDescriptor JobDescriptor) (JobSum
 		return JobSummary{
 			JobType:       Freestyle,
 			JobDescriptor: jobDescriptor,
-			GitURL:        "",  // the use of this field is deprecated
-			Branch:        "",  // the use of this field is deprecated
+			GitURL:        "", // the use of this field is deprecated
+			Branch:        "", // the use of this field is deprecated
 		}, nil
 	}
 	return JobSummary{}, fmt.Errorf("Unhandled job type for job name: %s\n", jobDescriptor)

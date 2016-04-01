@@ -135,15 +135,15 @@ func TestGetJobConfig(t *testing.T) {
 	}
 
 	if cfg.SCM.Class != "hudson.plugins.git.GitSCM" {
-		t.Fatalf("Wanted SCM.Class == hudson.plugins.git.GitSCM but found %d\n", cfg.SCM.Class)
+		t.Fatalf("Wanted SCM.Class == hudson.plugins.git.GitSCM but found %s\n", cfg.SCM.Class)
 	}
 
 	if cfg.RootModule.GroupID != "com.example.widgets" {
-		t.Fatalf("Wanted RootModule.GroupID == com.example.com but found %d\n", cfg.RootModule.GroupID)
+		t.Fatalf("Wanted RootModule.GroupID == com.example.com but found %s\n", cfg.RootModule.GroupID)
 	}
 
 	if cfg.RootModule.ArtifactID != "widge" {
-		t.Fatalf("Wanted RootModule.ArtifactID == widge but found %d\n", cfg.RootModule.ArtifactID)
+		t.Fatalf("Wanted RootModule.ArtifactID == widge but found %s\n", cfg.RootModule.ArtifactID)
 	}
 
 	if len(cfg.Publishers.RedeployPublishers) != 1 {
@@ -151,7 +151,7 @@ func TestGetJobConfig(t *testing.T) {
 	}
 
 	if cfg.Publishers.RedeployPublishers[0].URL != "http://nexus.example.com/nexus/content/repositories/snapshots/" {
-		t.Fatalf("Wanted Publishers.RedeployPublishers[0].URL == http://nexus.example.com/nexus/content/repositories/snapshots/ but found %s\n", len(cfg.Publishers.RedeployPublishers[0].URL))
+		t.Fatalf("Wanted Publishers.RedeployPublishers[0].URL == http://nexus.example.com/nexus/content/repositories/snapshots/ but found %d\n", len(cfg.Publishers.RedeployPublishers[0].URL))
 	}
 
 	if len(cfg.SCM.UserRemoteConfigs.UserRemoteConfig) != 1 {
@@ -159,7 +159,7 @@ func TestGetJobConfig(t *testing.T) {
 	}
 
 	if cfg.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL != "ssh://example.com/proj/cool.git" {
-		t.Fatalf("Wanted SCM.UserRemoteConfigs[0].UserRemoteConfig.URL == ssh://example.com/proj/cool.git but found %s\n", len(cfg.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL))
+		t.Fatalf("Wanted SCM.UserRemoteConfigs[0].UserRemoteConfig.URL == ssh://example.com/proj/cool.git but found %d\n", len(cfg.SCM.UserRemoteConfigs.UserRemoteConfig[0].URL))
 	}
 
 	if len(cfg.SCM.Branches.Branch) != 1 {
@@ -167,7 +167,7 @@ func TestGetJobConfig(t *testing.T) {
 	}
 
 	if cfg.SCM.Branches.Branch[0].Name != "origin/develop" {
-		t.Fatalf("Wanted SCM.Branches.Branch[0].Name == origin/develop but found %d\n", cfg.SCM.Branches.Branch[0].Name)
+		t.Fatalf("Wanted SCM.Branches.Branch[0].Name == origin/develop but found %s\n", cfg.SCM.Branches.Branch[0].Name)
 	}
 }
 

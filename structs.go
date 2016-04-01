@@ -31,7 +31,9 @@ type (
 	}
 
 	JobDescriptor struct {
-		Name string `json:"name"`
+		Name  string `json:"name"`
+		Color string `json:"color"`
+		URL   string `json:"url"`
 	}
 
 	Jobs struct {
@@ -58,14 +60,14 @@ type (
 	JobSummary struct {
 		JobDescriptor JobDescriptor
 		JobType       JobType
-		GitURL        string  // the use of this field is deprecated
-		Branch        string  // the use of this field is deprecated
+		GitURL        string // the use of this field is deprecated
+		Branch        string // the use of this field is deprecated
 	}
 
 	Scm struct {
 		XMLName           xml.Name          `xml:"scm"`
 		Class             string            `xml:"class,attr"`
-		UserRemoteConfigs UserRemoteConfigs `xml:userRemoteConfigs`
+		UserRemoteConfigs UserRemoteConfigs `xml:"userRemoteConfigs"`
 		Branches          Branches          `xml:"branches"`
 	}
 

@@ -19,12 +19,12 @@ var (
         {
             "color": "blue", 
             "name": "Jenkins Demo", 
-            "url": "http://platform-jenkins-master.qa.example.com:8080/job/Jenkins%20Demo/"
+	    "url": "http://build.example.com:8080/job/Jenkins%20Demo/"
         }, 
         {
-            "color": "blue", 
+            "color": "yellow", 
             "name": "cool-service", 
-            "url": "http://platform-jenkins-master.qa.example.com:8080/job/cool-service/"
+            "url": "http://build.example.com:8080/job/cool-service/"
         } 
     ], 
     "mode": "NORMAL", 
@@ -64,9 +64,9 @@ func TestGetJobsNoError(t *testing.T) {
 		if r.Header.Get("Accept") != "application/json" {
 			t.Fatalf("GetJobs() expected request Accept header to be application/json but found %s\n", r.Header.Get("Accept"))
 		}
-        if r.Header.Get("Authorization") != "Basic dTpw" {
-            t.Fatalf("Want Basic dTpw but got %s\n", r.Header.Get("Authorization"))
-        }
+		if r.Header.Get("Authorization") != "Basic dTpw" {
+			t.Fatalf("Want Basic dTpw but got %s\n", r.Header.Get("Authorization"))
+		}
 		fmt.Fprintln(w, jenkinsJobsResponse)
 	}))
 	defer testServer.Close()
@@ -89,6 +89,19 @@ func TestGetJobsNoError(t *testing.T) {
 			t.Fatalf("GetJobs() expected to contain %s, but did not\n", p)
 		}
 	}
+	if jobs["Jenkins Demo"].URL != "http://build.example.com:8080/job/Jenkins%20Demo/" {
+		t.Fatalf("Want http://build.example.com:8080/job/Jenkins%%20Demo/ but got %s\n", jobs["Jenkins Demo"].URL)
+	}
+	if jobs["Jenkins Demo"].Color != "blue" {
+		t.Fatalf("Want blue but got %s\n", jobs["Jenkins Demo"].Color)
+	}
+
+	if jobs["cool-service"].URL != "http://build.example.com:8080/job/cool-service/" {
+		t.Fatalf("Want http://build.example.com:8080/job/cool-service/ but got %s\n", jobs["cool-service"].URL)
+	}
+	if jobs["cool-service"].Color != "yellow" {
+		t.Fatalf("Want yellow but got %s\n", jobs["cool-service"].Color)
+	}
 }
 
 func TestGetJobs500(t *testing.T) {
@@ -100,9 +113,9 @@ func TestGetJobs500(t *testing.T) {
 		if r.Header.Get("Accept") != "application/json" {
 			t.Fatalf("GetJobs() expected request Accept header to be application/json but found %s\n", r.Header.Get("Accept"))
 		}
-        if r.Header.Get("Authorization") != "Basic dTpw" {
-            t.Fatalf("Want Basic dTpw but got %s\n", r.Header.Get("Authorization"))
-        }
+		if r.Header.Get("Authorization") != "Basic dTpw" {
+			t.Fatalf("Want Basic dTpw but got %s\n", r.Header.Get("Authorization"))
+		}
 		w.WriteHeader(500)
 	}))
 	defer testServer.Close()
