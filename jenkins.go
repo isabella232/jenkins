@@ -17,15 +17,13 @@ import (
 	"github.com/ae6rt/retry"
 )
 
-var Log *log.Logger = log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile)
+var Log *log.Logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 
 func NewClient(baseURL *url.URL, username, password string) Jenkins {
 	return Client{baseURL: baseURL, userName: username, password: password}
 }
 
 func (client Client) GetJobSummariesFromFilesystem(root string) ([]JobSummary, error) {
-	Log.Printf("jenkins.GetJobSummariesFromFilesystem from %s\n", root)
-
 	if exists, err := dirExists(root); err != nil || !exists {
 		if err != nil {
 			return nil, err
@@ -66,7 +64,6 @@ func (client Client) GetJobSummariesFromFilesystem(root string) ([]JobSummary, e
 }
 
 func (client Client) GetJobSummaries() ([]JobSummary, error) {
-	Log.Printf("jenkins.GetJobSummaries...\n")
 	if jobDescriptors, err := client.GetJobs(); err != nil {
 		return nil, err
 	} else {
@@ -133,7 +130,6 @@ func (client Client) GetJobs() (map[string]JobDescriptor, error) {
 	var data []byte
 	work := func() error {
 		req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/json/jobs", client.baseURL.String()), nil)
-		Log.Printf("jenkins.GetJobs URL: %s\n", req.URL)
 		if err != nil {
 			return err
 		}
@@ -177,7 +173,6 @@ func (client Client) GetJobConfig(jobName string) (JobConfig, error) {
 	var data []byte
 	work := func() error {
 		req, err := http.NewRequest("GET", fmt.Sprintf("%s/job/%s/config.xml", client.baseURL.String(), jobName), nil)
-		Log.Printf("jenkins.GetJobConfig URL: %s\n", req.URL)
 		if err != nil {
 			return err
 		}
@@ -212,7 +207,6 @@ func (client Client) GetJobConfig(jobName string) (JobConfig, error) {
 // CreateJob creates a Jenkins job with the given name for the given XML job config.
 func (client Client) CreateJob(jobName, jobConfigXML string) error {
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/createItem?name=%s", client.baseURL.String(), jobName), bytes.NewBuffer([]byte(jobConfigXML)))
-	Log.Printf("jenkins.CreateJob URL: %s\n", req.URL)
 	if err != nil {
 		return err
 	}
@@ -234,7 +228,6 @@ func (client Client) DeleteJob(jobName string) error {
 	retry := retry.New(3*time.Second, 3, retry.DefaultBackoffFunc)
 	work := func() error {
 		req, err := http.NewRequest("POST", fmt.Sprintf("%s/job/%s/doDelete", client.baseURL.String(), jobName), bytes.NewBuffer([]byte("")))
-		Log.Printf("jenkins.DeleteJob URL: %s\n", req.URL)
 		if err != nil {
 			return err
 		}
