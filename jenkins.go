@@ -246,6 +246,46 @@ func (client Client) DeleteJob(jobName string) error {
 	return retry.Try(work)
 }
 
+// GetLastBuild retrieves the last build by job name
+func (client Client) GetLastBuild(jobName string) (LastBuild, error) {
+	retry := retry.New(5*time.Second, 2, func(attempts uint) {
+		if attempts == 0 {
+			return
+		}
+		time.Sleep((1 << attempts) * time.Second)
+	})
+
+	var data []byte
+	work := func() error {
+		req, err := http.NewRequest("GET", fmt.Sprintf("%s/job/%s/lastBuild/api/json?depth=1&tree=timestamp,result,url", client.baseURL.String(), jobName), nil)
+		if err != nil {
+			return err
+		}
+		req.Header.Set("Accept", "application/json")
+		req.SetBasicAuth(client.userName, client.password)
+
+		var responseCode int
+		responseCode, data, err = consumeResponse(req)
+		if err != nil {
+			return err
+		}
+
+		if responseCode != http.StatusOK {
+			return fmt.Errorf("Status code: %d, response %s", responseCode, string(data))
+		}
+		return nil
+	}
+	if err := retry.Try(work); err != nil {
+		return LastBuild{}, err
+	}
+
+	var lastBuild LastBuild
+	if err := json.Unmarshal(data, &lastBuild); err != nil {
+		return LastBuild{}, err
+	}
+	return lastBuild, nil
+}
+
 func consumeResponse(req *http.Request) (int, []byte, error) {
 	var response *http.Response
 	var err error

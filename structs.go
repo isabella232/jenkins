@@ -19,6 +19,7 @@ type (
 		GetJobConfig(jobName string) (JobConfig, error)
 		GetJobSummaries() ([]JobSummary, error)
 		GetJobSummariesFromFilesystem(root string) ([]JobSummary, error)
+		GetLastBuild(jobName string) (LastBuild, error)
 		CreateJob(jobName, jobConfigXML string) error
 		DeleteJob(jobName string) error
 	}
@@ -105,5 +106,11 @@ type (
 		XMLName    xml.Name `xml:"rootModule"`
 		GroupID    string   `xml:"groupId"`
 		ArtifactID string   `xml:"artifactId"`
+	}
+
+	LastBuild struct {
+		Result          string `json:"result"`
+		TimestampMillis int64  `json:"timestamp"`
+		URL             string `json:"url"`
 	}
 )
