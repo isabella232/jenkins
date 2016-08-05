@@ -1,5 +1,5 @@
 all:
-	go fmt
-	go vet
-	godep go test
-	godep go build
+	GO15VENDOREXPERIMENT=0 godep go fmt
+	GO15VENDOREXPERIMENT=0 godep go vet
+	GO15VENDOREXPERIMENT=0 godep go test
+	GO15VENDOREXPERIMENT=0 godep go build

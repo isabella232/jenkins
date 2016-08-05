@@ -12,7 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/ae6rt/retry"
 )
@@ -80,7 +79,7 @@ func (client Client) GetJobSummaries() ([]JobSummary, error) {
 }
 
 func (client Client) getJobSummary(jobDescriptor JobDescriptor) (JobSummary, error) {
-	retry := retry.New(3*time.Second, 3, retry.DefaultBackoffFunc)
+	retry := retry.New(3, retry.DefaultBackoffFunc)
 
 	var data []byte
 	work := func() error {
@@ -125,7 +124,7 @@ func referencesSingleGitRepo(scmInfo Scm) bool {
 
 // GetJobs retrieves the set of Jenkins jobs as a map indexed by job name.
 func (client Client) GetJobs() (map[string]JobDescriptor, error) {
-	retry := retry.New(3*time.Second, 3, retry.DefaultBackoffFunc)
+	retry := retry.New(3, retry.DefaultBackoffFunc)
 
 	var data []byte
 	work := func() error {
@@ -168,7 +167,7 @@ func (client Client) GetJobs() (map[string]JobDescriptor, error) {
 
 // GetJobConfig retrieves the Jenkins jobs config for the named job.
 func (client Client) GetJobConfig(jobName string) (JobConfig, error) {
-	retry := retry.New(3*time.Second, 3, retry.DefaultBackoffFunc)
+	retry := retry.New(3, retry.DefaultBackoffFunc)
 
 	var data []byte
 	work := func() error {
@@ -225,7 +224,7 @@ func (client Client) CreateJob(jobName, jobConfigXML string) error {
 
 // DeleteJob creates a Jenkins job with the given name for the given XML job config.
 func (client Client) DeleteJob(jobName string) error {
-	retry := retry.New(3*time.Second, 3, retry.DefaultBackoffFunc)
+	retry := retry.New(3, retry.DefaultBackoffFunc)
 	work := func() error {
 		req, err := http.NewRequest("POST", fmt.Sprintf("%s/job/%s/doDelete", client.baseURL.String(), jobName), bytes.NewBuffer([]byte("")))
 		if err != nil {
@@ -248,12 +247,7 @@ func (client Client) DeleteJob(jobName string) error {
 
 // GetLastBuild retrieves the last build by job name
 func (client Client) GetLastBuild(jobName string) (LastBuild, error) {
-	retry := retry.New(5*time.Second, 2, func(attempts uint) {
-		if attempts == 0 {
-			return
-		}
-		time.Sleep((1 << attempts) * time.Second)
-	})
+	retry := retry.New(3, retry.DefaultBackoffFunc)
 
 	var data []byte
 	work := func() error {

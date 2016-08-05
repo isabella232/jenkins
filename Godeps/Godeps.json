@@ -1,10 +1,12 @@
 {
 	"ImportPath": "github.com/xoom/jenkins",
 	"GoVersion": "go1.4.1",
+	"GodepVersion": "v61",
 	"Deps": [
 		{
 			"ImportPath": "github.com/ae6rt/retry",
-			"Rev": "435a860f3b6ead9e284faa0f3ecc43200f4cb486"
+			"Comment": "v2.0.0",
+			"Rev": "1a40fd118c4c589e39abd065d7e94145c45133a6"
 		}
 	]
 }
