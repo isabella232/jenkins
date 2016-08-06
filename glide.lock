@@ -1,0 +1,6 @@
+hash: cdb615189eb1895c0f002ce7870915daff49d6b86b824bf69cdc6984e45af340
+updated: 2016-08-05T19:05:55.846831359-07:00
+imports:
+- name: github.com/ae6rt/retry
+  version: 1a40fd118c4c589e39abd065d7e94145c45133a6
+testImports: []
